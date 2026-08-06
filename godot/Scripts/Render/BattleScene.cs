@@ -20,13 +20,6 @@ public sealed partial class BattleScene : Node3D
     // Tweens) speeds up together by construction, nothing to keep in sync.
     private static readonly float[] SpeedSteps = { 1f, 1.5f, 2f };
 
-    // Prompt 11 — "enemy turns at 1.3x player speed, telegraphs exempt": a
-    // render-side-only multiplier applied to a WeaponUltimate's "hit" beats
-    // when the caster is an enemy (never its "shape"/telegraph beats). This
-    // is a presentation choice, not a sim rule, so it lives here rather than
-    // in Ultimates.cs alongside the sim's own TimelineBudgetSeconds clamp.
-    private const double EnemyTurnSpeedMultiplier = 1.3;
-
     private GameRoot _game = null!;
     private BattleController _controller = null!;
     private Camera3D _camera = null!;
@@ -206,6 +199,7 @@ public sealed partial class BattleScene : Node3D
         DrainEvents();
         SyncActors();
         _vfx.SyncHazards(_controller.Hazards); // Prompt 10 — "trail visuals": no spawn event of its own, synced every frame
+        _vfx.SyncProjectiles(_controller.GetRenderProjectiles()); // live-iteration rework — same pattern, for in-flight ultimate projectiles
 
         CameraFitter.ApplyRig(_camera, _fit, (float)_controller.ShakeTrauma, (float)_controller.CameraPunch, _clock);
         _hud.UpdateBattle(_controller, _visuals);
@@ -243,33 +237,8 @@ public sealed partial class BattleScene : Node3D
     {
         List<SimEvent> events = _controller.DrainEvents();
 
-        // Prompt 10 — a WeaponUltimate's own Hit events resolved in the same
-        // sim tick, in the same order as its ResolutionTimeline's "hit" beats
-        // (Ultimates.FireShapeQuery adds both together per target). Consuming
-        // exactly that many of them here — wherever they fall among whatever
-        // else is interspersed (a kill's Death, Prompt 6 Siphon's Heal, an
-        // armor ultimate trigger) — and staggering them through VfxView.Defer
-        // is what turns "telegraph before every strike" and "staggered damage
-        // numbers" from data (Prompt 1's timeline) into something the player
-        // actually sees, instead of the whole ultimate flashing at once.
-        // Everything NOT captured this way (deaths, heals, shields, ...)
-        // still fires immediately below, exactly as before.
-        var consumedHitIndices = new HashSet<int>();
-        for (int i = 0; i < events.Count; i++)
+        foreach (SimEvent ev in events)
         {
-            if (events[i].Kind == SimEventKind.WeaponUltimate && events[i].WeaponUlt is { } ultSpec)
-            {
-                ScheduleWeaponUltimateTimeline(events[i], ultSpec, events, i, consumedHitIndices);
-            }
-        }
-
-        for (int i = 0; i < events.Count; i++)
-        {
-            if (consumedHitIndices.Contains(i))
-            {
-                continue;
-            }
-            SimEvent ev = events[i];
             switch (ev.Kind)
             {
                 case SimEventKind.Launch:
@@ -296,9 +265,13 @@ public sealed partial class BattleScene : Node3D
                     break;
 
                 case SimEventKind.WeaponUltimate:
-                    // Fully handled by ScheduleWeaponUltimateTimeline above —
-                    // its own SFX plays there, immediately, matching the
-                    // always-offset-0 first shape beat.
+                    // Live-iteration rework — just the cast SFX/flash now;
+                    // the actual travel and each impact are handled by the
+                    // live projectile sync (SyncProjectiles) and the normal
+                    // Hit case below, arriving naturally at whatever tick
+                    // each projectile actually connects.
+                    _vfx.OnWeaponUltimate(ev.Pos);
+                    _game.Sfx.Play(SfxId.Ultimate, -4f);
                     break;
 
                 case SimEventKind.Heal:
@@ -346,62 +319,6 @@ public sealed partial class BattleScene : Node3D
         _game.Sfx.Play(ev.Amount >= 250 ? SfxId.HeavyHit : SfxId.Hit, -8f);
     }
 
-    /// <summary>Schedules one WeaponUltimate's whole ResolutionTimeline through
-    /// VfxView.Defer and marks the Hit event indices it consumed so the main
-    /// DrainEvents pass skips their immediate handling.</summary>
-    private void ScheduleWeaponUltimateTimeline(
-        SimEvent ultEvent, WeaponUltimateSpec spec, List<SimEvent> events, int ultIndex, HashSet<int> consumedHitIndices)
-    {
-        _game.Sfx.Play(SfxId.Ultimate, -4f);
-
-        if (ultEvent.Timeline is not { } timeline)
-        {
-            _vfx.OnWeaponUltimate(ultEvent.Pos, ultEvent.Dir, spec); // no timeline data: fall back to firing everything at once
-            return;
-        }
-
-        // Prompt 11 — "enemy turns at 1.3x player speed, telegraphs exempt":
-        // only the "hit" beats below get divided by this; "shape" beats keep
-        // their sim-scheduled offset untouched.
-        bool casterIsEnemy = _visuals.TryGetValue(ultEvent.ActorId, out ActorVisual? caster) && caster.Team == Team.Enemy;
-        double hitSpeedDivisor = casterIsEnemy ? EnemyTurnSpeedMultiplier : 1.0;
-
-        int hitBeatsNeeded = 0;
-        foreach (TimelineBeat b in timeline.Beats)
-        {
-            if (b.Kind == "hit")
-            {
-                hitBeatsNeeded += 1;
-            }
-        }
-
-        var hitEventsInOrder = new List<SimEvent>();
-        for (int j = ultIndex + 1; j < events.Count && hitEventsInOrder.Count < hitBeatsNeeded; j++)
-        {
-            if (events[j].Kind == SimEventKind.Hit)
-            {
-                hitEventsInOrder.Add(events[j]);
-                consumedHitIndices.Add(j);
-            }
-        }
-
-        Vec2 pos = ultEvent.Pos;
-        Vec2 dir = ultEvent.Dir;
-        int hitIndex = 0;
-        foreach (TimelineBeat beat in timeline.Beats)
-        {
-            if (beat.Kind == "shape")
-            {
-                _vfx.Defer(beat.OffsetSeconds, () => _vfx.OnWeaponUltimate(pos, dir, spec));
-            }
-            else if (beat.Kind == "hit" && hitIndex < hitEventsInOrder.Count)
-            {
-                SimEvent hitEv = hitEventsInOrder[hitIndex++];
-                _vfx.Defer(beat.OffsetSeconds / hitSpeedDivisor, () => PlayHit(hitEv));
-            }
-        }
-    }
-
     // --- input --------------------------------------------------------------
 
     public override void _UnhandledInput(InputEvent @event)
@@ -420,18 +337,7 @@ public sealed partial class BattleScene : Node3D
                 {
                     if (_dragTouchIndex == -1)
                     {
-                        if (_controller.IsAwaitingHeroInput())
-                        {
-                            BeginDrag(touch.Index, touch.Position);
-                        }
-                        else
-                        {
-                            // Prompt 11 — "tap-to-advance that never skips
-                            // damage": outside the player's own aiming turn, a
-                            // tap collapses whatever's still queued in the
-                            // deferred VFX playback instead of doing nothing.
-                            _vfx.FlushDeferred();
-                        }
+                        BeginDrag(touch.Index, touch.Position);
                     }
                 }
                 else if (touch.Index == _dragTouchIndex)
@@ -603,6 +509,7 @@ public sealed partial class BattleScene : Node3D
         {
             return;
         }
+        _aim.HidePreview(); // matches EndDrag's real-touch path — autofire never left this stale before
         _controller.Release(_dragSim);
     }
 

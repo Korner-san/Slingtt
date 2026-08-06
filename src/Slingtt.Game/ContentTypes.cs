@@ -109,11 +109,11 @@ public sealed class UltimateDef
 {
     public string Id { get; set; } = "";
     public string NameKey { get; set; } = "";
-    public string Kind { get; set; } = ""; // cross | beam | aftershock | bulwark | swift | vital
-    // Base shape size before the rarity scale multiplier (Prompt 3). Only one
-    // of these is meaningful per Kind: Width for cross/beam, Radius for
-    // aftershock.
-    public double? BaseWidth { get; set; }
+    public string Kind { get; set; } = ""; // striker | boomerang | grenade | bulwark | swift | vital
+    // Base reach before the rarity scale multiplier. Only one of these is
+    // meaningful per Kind: BaseRange for boomerang, BaseRadius for grenade —
+    // striker needs neither (its reach is bullet/direction count, not size).
+    public double? BaseRange { get; set; }
     public double? BaseRadius { get; set; }
     public List<UltimateTierDef> Tiers { get; set; } = new();
 }
@@ -186,34 +186,47 @@ public sealed class ItemRarityBalance
         => StatMultiplier.TryGetValue(rarity, out double m) ? m : 1.0;
 }
 
-// Prompt 3 — "the main mechanical payload." Structure (element count) and
-// scale (width/radius) of a weapon ultimate's shape now come from the
-// wielding item's RARITY index (0=Common..4=Legendary) via the arrays below,
-// not from evolution tier. Sweep (the per-level angular escalation) and dual
-// activation (Legendary-exclusive) constants live here too since they're the
-// same kind of "how much does this ability actually do" balance data.
+// Prompt 3 (reworked in a later live-iteration pass) — "the main mechanical
+// payload." Striker's bullet count and Grenade/Boomerang's reach scale with
+// the wielding item's RARITY index (0=Common..4=Legendary); Striker's
+// direction count and Boomerang's fan angle scale with evolution TIER
+// (1..3, gated by item level 10/20/30) instead — two independent axes, not
+// one.
 public sealed class UltimateEscalationBalance
 {
-    public List<int> ArmCountByRarityIndex { get; set; } = new() { 2, 2, 3, 3, 4 };
-    public List<int> LineCountByRarityIndex { get; set; } = new() { 1, 1, 2, 2, 3 };
-    public List<double> ScalePerRarityIndex { get; set; } = new() { 1.0, 1.15, 1.3, 1.45, 1.6 };
-    public double SweepMaxDegrees { get; set; } = 20;
-    public double SweepDamageMult { get; set; } = 0.6;
-    public double SweepMinBeatOffsetSeconds { get; set; } = 0.15;
-    public double AftershockBonusRingScale { get; set; } = 1.3;
+    /// <summary>Striker only — bullets fired per direction.</summary>
+    public List<int> BulletCountByRarityIndex { get; set; } = new() { 2, 2, 3, 3, 4 };
 
-    // Prompt 11 — "post-landing resolution capped at 1800ms worst case at 1x
-    // speed." Same kind of balance number as the two fields above (it shapes
-    // ResolutionTimeline beat spacing), so it lives alongside them.
-    public double TimelineBudgetSeconds { get; set; } = 1.8;
+    /// <summary>Grenade's AoeRadius and Boomerang's FanRange both scale off
+    /// this the same way width/radius always have.</summary>
+    public List<double> ScalePerRarityIndex { get; set; } = new() { 1.0, 1.15, 1.3, 1.45, 1.6 };
+
+    /// <summary>Boomerang's fan half-angle cap — ramps linearly across the
+    /// item's raw level (1..30), capped here, same formula the old sweep
+    /// angle used.</summary>
+    public double FanMaxHalfAngleDegrees { get; set; } = 20;
+
+    /// <summary>Striker only — firing directions per evolution tier (1..3).
+    /// Direction 0 is always the exact landing direction; tier 2's second
+    /// direction lands exactly opposite it ("front and back").</summary>
+    public List<int> DirectionCountByTier { get; set; } = new() { 1, 2, 4 };
 
     private static int AtIndex(List<int> list, int i) => list[Math.Clamp(i, 0, list.Count - 1)];
 
-    public int ArmCountFor(int rarityIndex) => AtIndex(ArmCountByRarityIndex, rarityIndex);
-    public int LineCountFor(int rarityIndex) => AtIndex(LineCountByRarityIndex, rarityIndex);
+    public int BulletCountFor(int rarityIndex) => AtIndex(BulletCountByRarityIndex, rarityIndex);
+    public int DirectionCountFor(int evolutionTier) => AtIndex(DirectionCountByTier, evolutionTier - 1);
 
     public double ScaleFor(int rarityIndex)
         => ScalePerRarityIndex[Math.Clamp(rarityIndex, 0, ScalePerRarityIndex.Count - 1)];
+}
+
+/// <summary>Shared travel speed/range for weapon-ultimate projectiles
+/// (Striker's bullets, Grenade, Boomerang) — see SimConfig's own fields for
+/// why these are shared across all three rather than per-kind.</summary>
+public sealed class UltimateProjectilesBalance
+{
+    public double Speed { get; set; } = 3.5;
+    public double MaxRange { get; set; } = 14.0;
 }
 
 // Prompt 4 — party of 2 active / 1 benched. The only balance number the bench
@@ -373,6 +386,7 @@ public sealed class Balance
     public SimBalance Sim { get; set; } = new();
     public ItemRarityBalance ItemRarity { get; set; } = new();
     public UltimateEscalationBalance UltimateEscalation { get; set; } = new();
+    public UltimateProjectilesBalance UltimateProjectiles { get; set; } = new();
     public BenchBalance Bench { get; set; } = new();
     public ArchetypeBalance Archetype { get; set; } = new();
     public EnemySpecialsBalance EnemySpecials { get; set; } = new();

@@ -26,6 +26,21 @@ public sealed class RenderActor
     public bool Marked;
 }
 
+/// <summary>Live-iteration rework — a weapon-ultimate projectile in flight
+/// (bullet/grenade/boomerang). Read directly from World.Projectiles, no
+/// interpolation: projectiles travel slowly and the sim ticks at 120Hz, so
+/// per-frame steps stay small enough that this looks smooth without the
+/// Prev/Curr interpolation RenderActor uses — an accepted v1 simplification.</summary>
+public sealed class RenderProjectile
+{
+    public string Id = "";
+    public ProjectileKind Kind;
+    public double X;
+    public double Y;
+    public double DirX;
+    public double DirY;
+}
+
 public sealed class AimState
 {
     public Vec2 Self;       // sim position of the active hero
@@ -266,6 +281,33 @@ public sealed class BattleController
     /// hazard has no spawn event of its own to react to; it just appears in
     /// this list).</summary>
     public IReadOnlyList<Hazard> Hazards => World.Hazards;
+
+    /// <summary>Live-iteration rework — the render layer syncs against this
+    /// every frame the same way it syncs Hazards, rather than reacting to a
+    /// one-shot spawn event: a projectile updates continuously while it's
+    /// alive, so there's no single moment a spawn event alone would capture.</summary>
+    public List<RenderProjectile> GetRenderProjectiles()
+    {
+        var outp = new List<RenderProjectile>(World.Projectiles.Count);
+        foreach (UltimateProjectile p in World.Projectiles)
+        {
+            if (p.DelaySeconds > 0)
+            {
+                continue; // not yet active — mirrors the sim's own gate in Projectiles.Advance
+            }
+            Vec2 dir = p.Vel.Normalized();
+            outp.Add(new RenderProjectile
+            {
+                Id = p.Id,
+                Kind = p.Kind,
+                X = p.Pos.X,
+                Y = p.Pos.Y,
+                DirX = dir.X,
+                DirY = dir.Y,
+            });
+        }
+        return outp;
+    }
 
     public bool IsAwaitingHeroInput()
         => World.Phase == Phase.Aiming

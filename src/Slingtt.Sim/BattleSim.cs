@@ -101,7 +101,10 @@ public static class BattleSim
 
         Ultimates.FireWeaponUltimate(world, cfg, incoming);
 
-        world.Phase = Phase.Settling;
+        // Not straight to Settling: the arrival ultimate can spawn real
+        // projectiles (Projectiles.cs) that need further ticks to resolve,
+        // same as the normal Ultimate-phase firing does.
+        world.Phase = Phase.UltimateTravel;
         world.Tick += 1;
         return true;
     }
@@ -111,11 +114,22 @@ public static class BattleSim
     /// own launch from the world RNG.</summary>
     public static void Step(World world, SimConfig cfg)
     {
+        if (world.Phase == Phase.Ended)
+        {
+            return;
+        }
+
+        // In-flight ultimate projectiles advance every tick regardless of the
+        // dominant phase, not just Phase.UltimateTravel: Prompt 5's contact
+        // combo can fire a teammate's weapon ultimate mid-flight while the
+        // ACTIVE actor is still Phase.Travelling, and those projectiles need
+        // to keep flying independently of whatever the active actor is doing.
+        // Phase.UltimateTravel's own case below only cares about *waiting*
+        // for the list to empty before handing the turn off.
+        Projectiles.Advance(world, cfg);
+
         switch (world.Phase)
         {
-            case Phase.Ended:
-                return;
-
             case Phase.Aiming:
             {
                 Actor self = world.ActiveActor();
@@ -190,10 +204,20 @@ public static class BattleSim
                 Actor self = world.ActiveActor();
                 Ultimates.FireWeaponUltimate(world, cfg, self);
                 MarkerSpit.FireIfApplicable(world, cfg, self); // Prompt 7 — enemies never have Weapon.Ultimate, so this never doubles up with the line above
-                world.Phase = Phase.Settling;
+                world.Phase = Phase.UltimateTravel;
                 world.Tick += 1;
                 return;
             }
+
+            case Phase.UltimateTravel:
+                // Projectiles.Advance already ran unconditionally above, for
+                // this tick — just check whether that emptied the list.
+                if (world.Projectiles.Count == 0)
+                {
+                    world.Phase = Phase.Settling;
+                }
+                world.Tick += 1;
+                return;
 
             case Phase.Settling:
                 if (world.LivingCount(Team.Enemy) == 0)

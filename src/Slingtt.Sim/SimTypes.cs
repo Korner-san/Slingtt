@@ -33,6 +33,13 @@ public enum Phase
     Aiming,
     Travelling,
     Ultimate,
+
+    /// <summary>Live-iteration rework — weapon ultimates now spawn real,
+    /// slow-traveling projectiles (Projectiles.cs) instead of resolving
+    /// instantly. The sim sits in this phase, ticking Projectiles.Advance,
+    /// until every spawned projectile has hit or expired.</summary>
+    UltimateTravel,
+
     Settling,
     Ended,
 }
@@ -53,9 +60,21 @@ public enum HitKind
 
 public enum WeaponUltKind
 {
-    Cross,
-    Beam,
-    Aftershock,
+    /// <summary>Sword. A volley of bullets fired in the hero's landing
+    /// direction — bullet count scales with rarity, direction count with
+    /// evolution tier. Each bullet hits one enemy only, but for more damage
+    /// than a single Grenade/Boomerang hit, since it can never multi-hit.</summary>
+    Striker,
+
+    /// <summary>Lance. Flies out in the landing direction; on reaching its
+    /// range, delivers one fan-shaped hit (multi-target, no return pass).
+    /// Range scales with rarity, fan angle with evolution tier.</summary>
+    Boomerang,
+
+    /// <summary>Hammer. Flies at the current furthest living enemy; explodes
+    /// on arrival, dealing AoE damage (multi-target) to everyone in range.
+    /// AoE radius scales with rarity.</summary>
+    Grenade,
 }
 
 public enum ArmorUltKind
@@ -84,33 +103,40 @@ public enum EndReason
     TurnLimit,
 }
 
-/// <summary>Discriminated-union stand-in for the TS WeaponUltimateSpec. Geometry
-/// (arm count, line angles, width, radius) lives entirely in Shape as of Prompt 1
-/// — Kind is kept because it still selects non-geometric behaviour (Aftershock's
-/// stun) and because it's what content authoring keys off of; DmgMult/StunTurns
-/// are effect parameters, not shape.
+/// <summary>Discriminated-union stand-in for the TS WeaponUltimateSpec. All
+/// fields below are pre-resolved once by BattleSetup from the wielding item's
+/// level and rarity — the sim itself never computes rarity/level math, it
+/// just reads what it's told, same determinism posture as everything else
+/// here. Only the fields relevant to Kind are meaningful; the rest sit at
+/// their default, same convention ArmorUltimateSpec already uses.
 ///
-/// Prompt 3 adds three pre-resolved escalation values, computed once in
-/// BattleSetup from the wielding item's level and rarity (never recomputed by
-/// the sim itself — the sim just reads what it's told, same determinism
-/// posture as everything else here):
-/// SweepDegrees — already fraction-of-gap-and-20°-cap resolved; 0 means no
-/// sweep pass fires at all.
-/// SweepBidirectional — true at evolution gates (level 10/20/30): sweep fires
-/// both clockwise and counter-clockwise instead of clockwise only (Cross/Beam),
-/// or two bonus rings instead of one (Aftershock).
+/// Striker: BulletCount (rarity-scaled) fired in each of DirectionCount
+/// (evolution-tier-scaled) directions, direction 0 always the exact landing
+/// direction.
+/// Grenade: AoeRadius (rarity-scaled) around wherever it lands, on the
+/// current furthest living enemy.
+/// Boomerang: FanRange (rarity-scaled) and FanHalfAngleRadians
+/// (evolution-tier-scaled, ramps 1..30 level, capped) define the one fan hit
+/// it delivers on arrival.
 /// DualActivation — true only when the wielding item's rarity is Legendary:
-/// the whole ultimate fires a second, full-strength, unfiltered time after the
-/// base activation (and its sweep) resolve.</summary>
+/// the whole thing fires again, delayed, after the first wave is spawned.</summary>
 public readonly struct WeaponUltimateSpec
 {
     public WeaponUltKind Kind { get; init; }
-    public ShapeDef Shape { get; init; }
     public double DmgMult { get; init; }
     public int StunTurns { get; init; }
-    public double SweepDegrees { get; init; }
-    public bool SweepBidirectional { get; init; }
     public bool DualActivation { get; init; }
+
+    // Striker
+    public int BulletCount { get; init; }
+    public int DirectionCount { get; init; }
+
+    // Grenade
+    public double AoeRadius { get; init; }
+
+    // Boomerang
+    public double FanRange { get; init; }
+    public double FanHalfAngleRadians { get; init; }
 }
 
 /// <summary>Discriminated-union stand-in for the TS ArmorUltimateSpec.</summary>
@@ -286,9 +312,6 @@ public struct SimEvent
     public EndReason Reason;
     public WeaponUltimateSpec? WeaponUlt;
     public ArmorUltimateSpec? ArmorUlt;
-
-    /// <summary>Set on WeaponUltimate events as of Prompt 1. Null elsewhere.</summary>
-    public ResolutionTimeline? Timeline;
 }
 
 public readonly struct ContactInfo

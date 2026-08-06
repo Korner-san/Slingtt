@@ -69,6 +69,14 @@ public sealed class World
     /// TurnOrder's per-turn housekeeping once their round has passed.</summary>
     public List<Hazard> Hazards = new();
 
+    /// <summary>Live-iteration rework — in-flight weapon-ultimate projectiles
+    /// (bullets/grenade/boomerang). Appended by Projectiles.Spawn, advanced
+    /// and pruned by Projectiles.Advance every tick of Phase.UltimateTravel.
+    /// Never touched during aim prediction: Predict.Trajectory's clone loop
+    /// stops the instant Phase leaves Travelling, before the sim would ever
+    /// reach the Ultimate phase that spawns these.</summary>
+    public List<UltimateProjectile> Projectiles = new();
+
     public static World Create(WorldSetup setup)
     {
         var w = new World
@@ -183,6 +191,7 @@ public sealed class World
             ComboStacks = ComboStacks,
             ComboContactThisTurn = ComboContactThisTurn,
             Hazards = Hazards, // read-only from the clone's perspective (DamageEnabled=false), sharing is safe
+            Projectiles = Projectiles, // never touched during prediction either — see the field's own doc comment
         };
         foreach (Actor a in Actors)
         {

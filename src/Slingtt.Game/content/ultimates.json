@@ -2,19 +2,18 @@
   {
     "id": "ult_crossing_slash",
     "nameKey": "ult_crossing_slash.name",
-    "kind": "cross",
-    "baseWidth": 0.8,
+    "kind": "striker",
     "tiers": [
-      { "dmgMult": 1.2 },
-      { "dmgMult": 1.6 },
-      { "dmgMult": 2.0 }
+      { "dmgMult": 1.8 },
+      { "dmgMult": 2.4 },
+      { "dmgMult": 3.2 }
     ]
   },
   {
     "id": "ult_piercing_ray",
     "nameKey": "ult_piercing_ray.name",
-    "kind": "beam",
-    "baseWidth": 0.7,
+    "kind": "boomerang",
+    "baseRange": 6.0,
     "tiers": [
       { "dmgMult": 1.1 },
       { "dmgMult": 1.5 },
@@ -24,7 +23,7 @@
   {
     "id": "ult_aftershock",
     "nameKey": "ult_aftershock.name",
-    "kind": "aftershock",
+    "kind": "grenade",
     "baseRadius": 2.0,
     "tiers": [
       { "dmgMult": 1.2, "stunTurns": 0 },

@@ -125,50 +125,50 @@ public class ArchetypeTraitTests
 
     // --- Carry -----------------------------------------------------------------
 
-    private static WeaponUltimateSpec Aftershock(double radius) => new()
+    private static WeaponUltimateSpec Grenade(double aoeRadius) => new()
     {
-        Kind = WeaponUltKind.Aftershock,
+        Kind = WeaponUltKind.Grenade,
         DmgMult = 1.0,
-        Shape = new ShapeDef { Type = ShapeType.Rings, Radius = radius },
+        AoeRadius = aoeRadius,
     };
 
     [Fact]
     public void Carry_ScalesTheUltimateShape_ByDistanceTravelled()
     {
-        Actor self = Hero("self", new Vec2(5, 5), ArmorArchetype.Light, Aftershock(2.0));
+        Actor self = Hero("self", new Vec2(5, 5), ArmorArchetype.Light, Grenade(2.0));
         self.DistanceTravelledThisTravel = 4; // carryBonus = min(0.5, 4*0.05) = 0.2
         World w = BuildWorld(self);
 
         Ultimates.FireWeaponUltimate(w, Cfg(), self);
 
         SimEvent ult = w.Events.Single(e => e.Kind == SimEventKind.WeaponUltimate);
-        Assert.Equal(2.4, ult.WeaponUlt!.Value.Shape.Radius, precision: 6); // 2.0 * 1.2
+        Assert.Equal(2.4, ult.WeaponUlt!.Value.AoeRadius, precision: 6); // 2.0 * 1.2
     }
 
     [Fact]
     public void Carry_CapsAtCarryMaxBonus()
     {
-        Actor self = Hero("self", new Vec2(5, 5), ArmorArchetype.Light, Aftershock(2.0));
+        Actor self = Hero("self", new Vec2(5, 5), ArmorArchetype.Light, Grenade(2.0));
         self.DistanceTravelledThisTravel = 20; // carryBonus = min(0.5, 20*0.05=1.0) = 0.5, capped
         World w = BuildWorld(self);
 
         Ultimates.FireWeaponUltimate(w, Cfg(), self);
 
         SimEvent ult = w.Events.Single(e => e.Kind == SimEventKind.WeaponUltimate);
-        Assert.Equal(3.0, ult.WeaponUlt!.Value.Shape.Radius, precision: 6); // 2.0 * 1.5
+        Assert.Equal(3.0, ult.WeaponUlt!.Value.AoeRadius, precision: 6); // 2.0 * 1.5
     }
 
     [Fact]
     public void Carry_ComposesMultiplicatively_WithThePromptFiveComboScale()
     {
-        Actor self = Hero("self", new Vec2(5, 5), ArmorArchetype.Light, Aftershock(2.0));
+        Actor self = Hero("self", new Vec2(5, 5), ArmorArchetype.Light, Grenade(2.0));
         self.DistanceTravelledThisTravel = 4; // carryBonus = 0.2
         World w = BuildWorld(self);
 
         Ultimates.FireWeaponUltimate(w, Cfg(), self, scaleMultiplier: 1.25);
 
         SimEvent ult = w.Events.Single(e => e.Kind == SimEventKind.WeaponUltimate);
-        Assert.Equal(3.0, ult.WeaponUlt!.Value.Shape.Radius, precision: 6); // 2.0 * 1.25 * 1.2
+        Assert.Equal(3.0, ult.WeaponUlt!.Value.AoeRadius, precision: 6); // 2.0 * 1.25 * 1.2
     }
 
     [Theory]
@@ -176,14 +176,14 @@ public class ArchetypeTraitTests
     [InlineData(ArmorArchetype.Heavy)]
     public void Carry_NeverApplies_ForNonLightArchetypes(ArmorArchetype archetype)
     {
-        Actor self = Hero("self", new Vec2(5, 5), archetype, Aftershock(2.0));
+        Actor self = Hero("self", new Vec2(5, 5), archetype, Grenade(2.0));
         self.DistanceTravelledThisTravel = 20; // would be a big bonus if this were Light
         World w = BuildWorld(self);
 
         Ultimates.FireWeaponUltimate(w, Cfg(), self);
 
         SimEvent ult = w.Events.Single(e => e.Kind == SimEventKind.WeaponUltimate);
-        Assert.Equal(2.0, ult.WeaponUlt!.Value.Shape.Radius, precision: 6); // unscaled
+        Assert.Equal(2.0, ult.WeaponUlt!.Value.AoeRadius, precision: 6); // unscaled
     }
 
     // --- TurnOrder housekeeping -------------------------------------------------

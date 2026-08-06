@@ -4,11 +4,14 @@ using Xunit;
 
 namespace Slingtt.Sim.Tests;
 
-// Prompt 3's content -> BattleSetup wiring: shape structure and scale come
-// from the wielding item's rarity, sweep degrees ramp with its level (capped),
-// and dual activation is Legendary-only regardless of level. All values here
-// are read back off the real embedded content (weapons.json), so this also
-// guards against a future content edit silently breaking the escalation.
+// Prompt 3's content -> BattleSetup wiring (reworked in a later live-iteration
+// pass, from Cross/Beam/Aftershock shapes to Striker/Boomerang/Grenade
+// projectiles): Striker's bullet count and Grenade/Boomerang's reach come
+// from the wielding item's rarity, Striker's direction count and Boomerang's
+// fan angle ramp with its evolution tier/level, and dual activation is
+// Legendary-only regardless of level. All values here are read back off the
+// real embedded content (weapons.json), so this also guards against a future
+// content edit silently breaking the escalation.
 public class ItemRarityEscalationTests
 {
     private static WeaponUltimateSpec UltimateFor(string weaponId, int weaponLevel)
@@ -25,57 +28,60 @@ public class ItemRarityEscalationTests
     }
 
     [Fact]
-    public void HigherRarityCrossWeapon_HasMoreArmsAndAWiderShape()
+    public void HigherRarityStrikerWeapon_FiresMoreBullets()
     {
         // wpn_squire_blade = Common (rarity index 0), wpn_aurelions_requiem =
-        // Legendary (index 4), both ult_crossing_slash.
+        // Legendary (index 4), both ult_crossing_slash (Striker).
         WeaponUltimateSpec common = UltimateFor("wpn_squire_blade", 30);
         WeaponUltimateSpec legendary = UltimateFor("wpn_aurelions_requiem", 30);
 
-        Assert.Equal(2, common.Shape.ArmCount);   // ArmCountByRarityIndex[0]
-        Assert.Equal(4, legendary.Shape.ArmCount); // ArmCountByRarityIndex[4]
-        Assert.Equal(1.6, legendary.Shape.Width / common.Shape.Width, precision: 6); // ScalePerRarityIndex 1.6 / 1.0
+        Assert.Equal(2, common.BulletCount);    // BulletCountByRarityIndex[0]
+        Assert.Equal(4, legendary.BulletCount);  // BulletCountByRarityIndex[4]
     }
 
     [Fact]
-    public void HigherRarityBeamWeapon_HasMoreLines()
+    public void HigherRarityBoomerangWeapon_HasALongerRange()
     {
-        // wpn_ash_lance = Common, wpn_skyrend_lance = Legendary, both ult_piercing_ray.
+        // wpn_ash_lance = Common, wpn_skyrend_lance = Legendary, both ult_piercing_ray (Boomerang).
         WeaponUltimateSpec common = UltimateFor("wpn_ash_lance", 30);
         WeaponUltimateSpec legendary = UltimateFor("wpn_skyrend_lance", 30);
 
-        Assert.Single(common.Shape.LineAngles!);         // LineCountByRarityIndex[0]
-        Assert.Equal(3, legendary.Shape.LineAngles!.Count); // LineCountByRarityIndex[4]
+        Assert.Equal(1.6, legendary.FanRange / common.FanRange, precision: 6); // ScalePerRarityIndex 1.6 / 1.0
     }
 
     [Fact]
-    public void HigherRarityAftershockWeapon_HasALargerRadius()
+    public void HigherRarityGrenadeWeapon_HasALargerAoeRadius()
     {
-        // wpn_cobble_maul = Common, wpn_sunforge_hammer = Legendary, both ult_aftershock.
+        // wpn_cobble_maul = Common, wpn_sunforge_hammer = Legendary, both ult_aftershock (Grenade).
         WeaponUltimateSpec common = UltimateFor("wpn_cobble_maul", 30);
         WeaponUltimateSpec legendary = UltimateFor("wpn_sunforge_hammer", 30);
 
-        Assert.Equal(1.6, legendary.Shape.Radius / common.Shape.Radius, precision: 6);
+        Assert.Equal(1.6, legendary.AoeRadius / common.AoeRadius, precision: 6);
     }
 
     [Fact]
-    public void SweepDegrees_RampsWithLevelAndCapsAtTwenty()
+    public void FanHalfAngle_RampsWithLevelAndCapsAtTwentyDegrees()
     {
-        // wpn_aurelions_requiem: Legendary cross, 4 arms -> 45deg inter-arm gap.
-        // level 10 (fraction 9/29): 9/29*45 = 13.9655... -- below the cap.
-        WeaponUltimateSpec atUnlock = UltimateFor("wpn_aurelions_requiem", 10);
-        Assert.Equal(9.0 / 29.0 * 45.0, atUnlock.SweepDegrees, precision: 4);
+        // wpn_skyrend_lance: Legendary boomerang.
+        // level 10 (fraction 9/29): 9/29*20deg, converted to radians.
+        WeaponUltimateSpec atUnlock = UltimateFor("wpn_skyrend_lance", 10);
+        Assert.Equal(9.0 / 29.0 * 20.0 * Math.PI / 180.0, atUnlock.FanHalfAngleRadians, precision: 6);
 
-        // level 30 (fraction 1): 1*45 = 45, clamped down to the 20deg cap.
-        WeaponUltimateSpec atMax = UltimateFor("wpn_aurelions_requiem", 30);
-        Assert.Equal(20, atMax.SweepDegrees);
+        // level 30 (fraction 1): exactly the 20deg cap.
+        WeaponUltimateSpec atMax = UltimateFor("wpn_skyrend_lance", 30);
+        Assert.Equal(20.0 * Math.PI / 180.0, atMax.FanHalfAngleRadians, precision: 6);
     }
 
-    [Fact]
-    public void SweepBidirectional_TrueAsSoonAsTheUltimateUnlocksAtLevelTen()
+    [Theory]
+    [InlineData(10, 1)]
+    [InlineData(20, 2)]
+    [InlineData(30, 4)]
+    public void DirectionCount_ScalesWithEvolutionTier_ForStrikerWeapons(int level, int expectedDirections)
     {
-        WeaponUltimateSpec ult = UltimateFor("wpn_squire_blade", 10);
-        Assert.True(ult.SweepBidirectional);
+        // wpn_squire_blade: Common Striker. Direction 0 is always the exact
+        // landing direction regardless of tier — only the count changes.
+        WeaponUltimateSpec ult = UltimateFor("wpn_squire_blade", level);
+        Assert.Equal(expectedDirections, ult.DirectionCount);
     }
 
     [Fact]

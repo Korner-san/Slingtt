@@ -46,18 +46,18 @@ public class ComboTests
         return w;
     }
 
-    private static WeaponUltimateSpec Aftershock(double radius) => new()
+    private static WeaponUltimateSpec Grenade(double aoeRadius) => new()
     {
-        Kind = WeaponUltKind.Aftershock,
+        Kind = WeaponUltKind.Grenade,
         DmgMult = 1.0,
-        Shape = new ShapeDef { Type = ShapeType.Rings, Radius = radius },
+        AoeRadius = aoeRadius,
     };
 
     [Fact]
     public void CheckContact_FiresTheTouchedHeroUltimate_At1_25xScale_AndIncrementsTheCounter()
     {
         Actor toucher = Hero("toucher", new Vec2(5, 5));
-        Actor teammate = Hero("teammate", new Vec2(5.3, 5), ult: Aftershock(2.0)); // within touch range
+        Actor teammate = Hero("teammate", new Vec2(5.3, 5), ult: Grenade(2.0)); // within touch range
         World w = BuildWorld(toucher, teammate);
 
         Combo.CheckContact(w, Cfg(), toucher);
@@ -68,7 +68,7 @@ public class ComboTests
 
         SimEvent ult = w.Events.Single(e => e.Kind == SimEventKind.WeaponUltimate);
         Assert.Equal("teammate", ult.ActorId);
-        Assert.Equal(2.5, ult.WeaponUlt!.Value.Shape.Radius, precision: 6); // 2.0 * 1.25
+        Assert.Equal(2.5, ult.WeaponUlt!.Value.AoeRadius, precision: 6); // 2.0 * 1.25
 
         Assert.Contains(w.Events, e => e.Kind == SimEventKind.ComboContact && e.ActorId == "toucher" && e.TargetId == "teammate");
     }
@@ -77,7 +77,7 @@ public class ComboTests
     public void CheckContact_FiresAtMostOncePerTravel()
     {
         Actor toucher = Hero("toucher", new Vec2(5, 5));
-        Actor teammate = Hero("teammate", new Vec2(5.3, 5), ult: Aftershock(2.0));
+        Actor teammate = Hero("teammate", new Vec2(5.3, 5), ult: Grenade(2.0));
         World w = BuildWorld(toucher, teammate);
 
         Combo.CheckContact(w, Cfg(), toucher);
@@ -91,7 +91,7 @@ public class ComboTests
     public void CheckContact_CapsAtTenStacks()
     {
         Actor toucher = Hero("toucher", new Vec2(5, 5));
-        Actor teammate = Hero("teammate", new Vec2(5.3, 5), ult: Aftershock(2.0));
+        Actor teammate = Hero("teammate", new Vec2(5.3, 5), ult: Grenade(2.0));
         World w = BuildWorld(toucher, teammate);
 
         for (int i = 0; i < 15; i++)
@@ -107,7 +107,7 @@ public class ComboTests
     public void CheckContact_NotTouchingYet_DoesNothing()
     {
         Actor toucher = Hero("toucher", new Vec2(5, 5));
-        Actor teammate = Hero("teammate", new Vec2(9, 9), ult: Aftershock(2.0)); // far away
+        Actor teammate = Hero("teammate", new Vec2(9, 9), ult: Grenade(2.0)); // far away
         World w = BuildWorld(toucher, teammate);
 
         Combo.CheckContact(w, Cfg(), toucher);
@@ -122,7 +122,7 @@ public class ComboTests
     public void CheckContact_BlockedEntirely_AgainstAMarkedHero()
     {
         Actor toucher = Hero("toucher", new Vec2(5, 5));
-        Actor teammate = Hero("teammate", new Vec2(5.3, 5), ult: Aftershock(2.0));
+        Actor teammate = Hero("teammate", new Vec2(5.3, 5), ult: Grenade(2.0));
         teammate.MarkedTurns = 2; // Prompt 7 — IsMarked is now MarkedTurns > 0
         World w = BuildWorld(toucher, teammate);
 
@@ -138,7 +138,7 @@ public class ComboTests
     {
         // The only other hero is benched — nobody to touch.
         Actor toucher = Hero("toucher", new Vec2(5, 5));
-        Actor benched = Hero("benched", new Vec2(5.3, 5), ult: Aftershock(2.0), benched: true);
+        Actor benched = Hero("benched", new Vec2(5.3, 5), ult: Grenade(2.0), benched: true);
         World w = BuildWorld(toucher, benched);
 
         Combo.CheckContact(w, Cfg(), toucher);
@@ -246,7 +246,7 @@ public class ComboTests
     public void ComboStacks_PersistThroughASwap()
     {
         Actor active = Hero("active", new Vec2(3, 3));
-        Actor benched = Hero("benched", new Vec2(6, 6), benched: true, ult: Aftershock(1.0));
+        Actor benched = Hero("benched", new Vec2(6, 6), benched: true, ult: Grenade(1.0));
         World w = BuildWorld(active, benched);
         w.ActiveActorId = "active";
         w.Phase = Phase.Aiming;

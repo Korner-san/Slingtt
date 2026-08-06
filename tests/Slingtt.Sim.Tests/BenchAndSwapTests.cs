@@ -101,9 +101,9 @@ public class BenchAndSwapTests
     {
         WeaponUltimateSpec incomingUlt = new()
         {
-            Kind = WeaponUltKind.Aftershock,
+            Kind = WeaponUltKind.Grenade,
             DmgMult = 2.0,
-            Shape = new ShapeDef { Type = ShapeType.Rings, Radius = 3.0 },
+            AoeRadius = 3.0,
         };
         Actor active = Hero("active", new Vec2(3, 3));
         Actor benched = Hero("benched", new Vec2(6, 6), benched: true, ult: incomingUlt);
@@ -111,18 +111,25 @@ public class BenchAndSwapTests
         World w = BuildWorld(active, benched, enemyInRange);
         w.ActiveActorId = "active";
         w.Phase = Phase.Aiming;
+        SimConfig cfg = Cfg();
 
-        bool ok = BattleSim.TrySwap(w, Cfg());
+        bool ok = BattleSim.TrySwap(w, cfg);
 
         Assert.True(ok);
         Assert.True(active.IsBenched); // outgoing benched
         Assert.False(benched.IsBenched); // incoming activated
         Assert.Equal(new Vec2(3, 3), benched.Pos); // entered at the outgoing tile
-        Assert.Equal(Phase.Settling, w.Phase); // consumed the whole turn
+        Assert.Equal(Phase.UltimateTravel, w.Phase); // arrival ultimate now travels for real before the turn passes
 
         Assert.Contains(w.Events, e => e.Kind == SimEventKind.Swap && e.ActorId == "active" && e.TargetId == "benched");
         Assert.Contains(w.Events, e => e.Kind == SimEventKind.WeaponUltimate && e.ActorId == "benched");
-        Assert.True(enemyInRange.Hp < 1000); // arrival ultimate actually fired from the new position
+
+        for (int i = 0; i < 1000 && w.Phase != Phase.Settling; i++)
+        {
+            BattleSim.Step(w, cfg);
+        }
+        Assert.Equal(Phase.Settling, w.Phase); // the arrival grenade resolved
+        Assert.True(enemyInRange.Hp < 1000); // and actually dealt damage from the new position
     }
 
     [Fact]

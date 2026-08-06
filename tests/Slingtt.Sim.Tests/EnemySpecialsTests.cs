@@ -342,9 +342,9 @@ public class EnemySpecialsTests
         // floor 10/15 full-battle smoke tests; this pins the exact scenario.
         WeaponUltimateSpec ult = new()
         {
-            Kind = WeaponUltKind.Aftershock,
+            Kind = WeaponUltKind.Grenade,
             DmgMult = 10.0, // guarantees a kill regardless of variance
-            Shape = new ShapeDef { Type = ShapeType.Rings, Radius = 5.0 },
+            AoeRadius = 5.0,
         };
         var hero = new Actor
         {
@@ -374,8 +374,17 @@ public class EnemySpecialsTests
         };
         Actor other = Enemy("other", new Vec2(2, 0));
         World w = BuildWorld(hero, splitCapable, other);
+        SimConfig cfg = Cfg();
 
-        Ultimates.FireWeaponUltimate(w, Cfg(), hero); // must not throw
+        Ultimates.FireWeaponUltimate(w, cfg, hero); // must not throw
+        // Grenade targets the furthest enemy ("other") and travels there for
+        // real now — advance until it arrives and its AoE resolves, the same
+        // "Collection was modified" hazard the regression originally caught
+        // (Damage.Apply's SpawnSplitChildren mutating world.Actors mid-pass).
+        for (int i = 0; i < 500 && w.Projectiles.Count > 0; i++)
+        {
+            Projectiles.Advance(w, cfg);
+        }
 
         Assert.Equal(0, splitCapable.Hp);
         Assert.Contains(w.Actors, a => a.Id == "splitCapable_split0"); // split child actually spawned

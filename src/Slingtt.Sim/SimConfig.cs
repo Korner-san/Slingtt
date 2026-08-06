@@ -27,21 +27,16 @@ public sealed class SimConfig
     public double HammerAoeCenterMult { get; init; } = 1.4;
     public double HammerAoeRimMult { get; init; } = 0.6;
 
-    // Prompt 3 — sweep/bonus-ring damage fraction and minimum stagger before
-    // its timeline beat, relative to the base activation's beat. The sweep
-    // angle itself is pre-resolved per-item on WeaponUltimateSpec, not here.
-    public double SweepDamageMult { get; init; } = 0.6;
-    public double SweepMinBeatOffsetSeconds { get; init; } = 0.15;
-
-    // Prompt 11 — "post-landing resolution capped at 1800ms worst case at 1x
-    // speed": the hard ceiling on a ResolutionTimeline's total span. A shape
-    // with enough targets (or enough waves — sweep rings, dual activation)
-    // that the raw HitBeatStaggerSeconds/SweepMinBeatOffsetSeconds spacing
-    // would blow past this gets every beat's offset rescaled down together at
-    // the end of Ultimates.FireWeaponUltimate, which is what makes the
-    // stagger compress with target count and makes aftershock's two rings
-    // share one budget instead of each getting their own.
-    public double TimelineBudgetSeconds { get; init; } = 1.8;
+    // Live-iteration rework — weapon ultimates are now real, tick-simulated
+    // traveling projectiles (Projectiles.cs) instead of an instant shape
+    // query. Speed is deliberately slow, shared across all three kinds
+    // (Striker/Grenade/Boomerang), so the flight itself reads clearly instead
+    // of looking instant. MaxRange only matters for Striker's bullets — the
+    // distance at which one that never found a target simply expires;
+    // Grenade always flies to a fixed target point and Boomerang always
+    // resolves at its own FanRange, so neither needs this as a safety cap.
+    public double UltimateProjectileSpeed { get; init; } = 3.5;
+    public double UltimateProjectileMaxRange { get; init; } = 14.0;
 
     // Prompt 4 — fraction of max HP a benched hero regenerates every turn (any
     // actor's turn, hero or enemy — see TurnOrder.AdvanceRoundRobin).

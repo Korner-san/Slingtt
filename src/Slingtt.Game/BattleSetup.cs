@@ -46,68 +46,9 @@ public static class BattleSetup
         _ => ArmorArchetype.Balanced,
     };
 
-    // Prompt 3 — shape structure (element count) and scale (width/radius) come
-    // from the wielding item's RARITY index, not evolution tier. Both grow
-    // together with rarity, per the arrays in UltimateEscalationBalance.
-    private static ShapeDef BuildShape(string kind, int rarityIdx, double? baseWidth, double? baseRadius, UltimateEscalationBalance esc)
-    {
-        double scale = esc.ScaleFor(rarityIdx);
-        return kind switch
-        {
-            "cross" => new ShapeDef
-            {
-                Type = ShapeType.RadialArms,
-                ArmCount = esc.ArmCountFor(rarityIdx),
-                Width = (baseWidth ?? 1) * scale,
-            },
-            "beam" => new ShapeDef
-            {
-                Type = ShapeType.Lines,
-                LineAngles = EvenlySpacedAngles(esc.LineCountFor(rarityIdx)),
-                Width = (baseWidth ?? 1) * scale,
-            },
-            "aftershock" => new ShapeDef
-            {
-                Type = ShapeType.Rings,
-                Radius = (baseRadius ?? 2) * scale,
-            },
-            _ => default,
-        };
-    }
-
-    /// <summary>count bidirectional lines spaced 180°/count apart, starting at
-    /// 0 — count=1 is just the base direction, count=2 matches the old
-    /// primary+perpendicular-secondary pair exactly.</summary>
-    private static List<double> EvenlySpacedAngles(int count)
-    {
-        count = Math.Max(count, 1);
-        double step = Math.PI / count;
-        var angles = new List<double>(count);
-        for (int i = 0; i < count; i++)
-        {
-            angles.Add(i * step);
-        }
-        return angles;
-    }
-
-    /// <summary>The angular gap between a shape's own elements — what the sweep
-    /// (Prompt 3) is a fraction of. Rings has no elements to have a gap between;
-    /// callers never ask it for one (Aftershock's escalation is concentric
-    /// rings, not a sweep angle).</summary>
-    private static double ElementGapDegrees(ShapeDef shape)
-    {
-        int count = shape.Type switch
-        {
-            ShapeType.RadialArms => Math.Max(shape.ArmCount, 1),
-            ShapeType.Lines => Math.Max(shape.LineAngles?.Count ?? 1, 1),
-            _ => 1,
-        };
-        return 180.0 / count;
-    }
-
     private static WeaponUltimateSpec? WeaponUltSpec(Content content, UltimateDef def, WeaponDef weapon, int level)
     {
-        int tier = Formulas.EvolutionTier(level); // still gates unlock (>=10) and DmgMult/StunTurns
+        int tier = Formulas.EvolutionTier(level); // gates unlock (>=10) and DmgMult/StunTurns
         if (tier < 1 || def.Tiers.Count == 0)
         {
             return null;
@@ -117,9 +58,9 @@ public static class BattleSetup
 
         WeaponUltKind? kind = def.Kind switch
         {
-            "cross" => WeaponUltKind.Cross,
-            "beam" => WeaponUltKind.Beam,
-            "aftershock" => WeaponUltKind.Aftershock,
+            "striker" => WeaponUltKind.Striker,
+            "boomerang" => WeaponUltKind.Boomerang,
+            "grenade" => WeaponUltKind.Grenade,
             _ => null, // armor kinds are not weapon ultimates
         };
         if (kind is null)
@@ -130,28 +71,24 @@ public static class BattleSetup
         ItemRarityBalance rarityBalance = content.Balance.ItemRarity;
         UltimateEscalationBalance esc = content.Balance.UltimateEscalation;
         int rarityIdx = Math.Max(0, rarityBalance.Order.IndexOf(weapon.Rarity));
-        ShapeDef shape = BuildShape(def.Kind, rarityIdx, def.BaseWidth, def.BaseRadius, esc);
 
-        // Sweep is a fraction of the shape's own inter-element gap, ramping
-        // linearly across the item's raw level (1..30), capped at
-        // SweepMaxDegrees. Aftershock has no angle to sweep — its escalation is
-        // the concentric ring handled entirely in Ultimates.cs.
-        double sweepDegrees = 0;
-        if (kind != WeaponUltKind.Aftershock)
-        {
-            double levelFraction = Math.Clamp((level - 1) / 29.0, 0, 1);
-            sweepDegrees = Math.Min(esc.SweepMaxDegrees, levelFraction * ElementGapDegrees(shape));
-        }
+        // Boomerang's fan half-angle ramps linearly across the item's raw
+        // level (1..30), capped at FanMaxHalfAngleDegrees — same ramp-then-
+        // cap shape the old sweep angle used, just aimed at a different field.
+        double levelFraction = Math.Clamp((level - 1) / 29.0, 0, 1);
+        double fanHalfAngleDegrees = levelFraction * esc.FanMaxHalfAngleDegrees;
 
         return new WeaponUltimateSpec
         {
             Kind = kind.Value,
-            Shape = shape,
             DmgMult = t.DmgMult ?? 1,
             StunTurns = t.StunTurns ?? 0,
-            SweepDegrees = sweepDegrees,
-            SweepBidirectional = tier >= 1, // any evolution gate reached (level >= 10)
             DualActivation = weapon.Rarity == "Legendary",
+            BulletCount = esc.BulletCountFor(rarityIdx),
+            DirectionCount = esc.DirectionCountFor(tier),
+            AoeRadius = (def.BaseRadius ?? 2) * esc.ScaleFor(rarityIdx),
+            FanRange = (def.BaseRange ?? 6) * esc.ScaleFor(rarityIdx),
+            FanHalfAngleRadians = fanHalfAngleDegrees * Math.PI / 180.0,
         };
     }
 
