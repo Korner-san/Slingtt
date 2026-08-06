@@ -6,6 +6,12 @@ namespace Slingtt.Game;
 public sealed class RenderActor
 {
     public string Id = "";
+
+    /// <summary>See Actor.ContentId — non-empty only for actors the render
+    /// layer might not already have a pre-built visual for (split-on-death
+    /// children), so it can build one lazily by looking this id up.</summary>
+    public string ContentId = "";
+
     public Team Team;
     public WeaponType WeaponType;
     public int Tier;
@@ -246,6 +252,7 @@ public sealed class BattleController
             outp.Add(new RenderActor
             {
                 Id = actor.Id,
+                ContentId = actor.ContentId,
                 Team = actor.Team,
                 WeaponType = actor.Weapon.Type,
                 Tier = actor.Weapon.Tier,

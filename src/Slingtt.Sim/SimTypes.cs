@@ -183,6 +183,10 @@ public sealed class ArmorStats
 public sealed class Actor
 {
     public string Id { get; init; } = "";
+
+    /// <summary>Opaque Game-layer tag — see ActorInit.ContentId.</summary>
+    public string ContentId { get; init; } = "";
+
     public Team Team { get; init; }
     public Vec2 Pos;
     public Vec2 Vel;

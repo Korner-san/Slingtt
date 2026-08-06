@@ -6,6 +6,13 @@ godot/android/
 bin/
 obj/
 
+# Exported builds — large binaries, never committed. Versioned APKs land in
+# builds/android/ (see scripts/export-apk.sh); *.apk also covers the
+# unversioned output Godot's own export step writes before the script renames it.
+builds/
+*.apk
+*.aab
+
 # Signing and secrets — never committed, per 02-technical/22-godot-project-structure.md §7
 *.keystore
 *.p12

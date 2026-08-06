@@ -12,10 +12,10 @@ config_version=5
 
 config/name="Sling TT Evolution"
 config/description="Slingshot tower battler — mobile conversion of the Sling TT Evolution web game."
-config/version="1.0.0"
+config/version="1.1.0"
 config/features=PackedStringArray("4.7", "Mobile", "C#")
 config/icon="res://icon.svg"
-run/main_scene="res://scenes/MainMenu.tscn"
+run/main_scene="res://scenes/SplashScreen.tscn"
 
 [autoload]
 

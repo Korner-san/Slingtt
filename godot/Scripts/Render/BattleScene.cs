@@ -30,6 +30,7 @@ public sealed partial class BattleScene : Node3D
 
     private readonly Dictionary<string, ActorView> _actorViews = new();
     private readonly Dictionary<string, ActorVisual> _visuals = new();
+    private readonly HashSet<string> _warnedMissingContentIds = new();
 
     private float _arenaW;
     private float _arenaH;
@@ -216,7 +217,18 @@ public sealed partial class BattleScene : Node3D
         {
             if (!_actorViews.TryGetValue(ra.Id, out ActorView? view))
             {
-                continue;
+                // Bug fix — "enemies disappear": a split-on-death boss's
+                // children (Prompt 7) are spawned mid-battle and were never
+                // in VisualRoster.Build's initial roster, so they had no
+                // ActorView at all and simply never rendered — the boss
+                // just vanished with nothing visibly replacing it, even
+                // though it mechanically split into two live enemies.
+                // Same fix applies to any other future mid-battle spawn.
+                view = TryCreateViewForUnknownActor(ra);
+                if (view is null)
+                {
+                    continue;
+                }
             }
             view.SetAlive(ra.Alive);
             if (!ra.Alive)
@@ -231,6 +243,51 @@ public sealed partial class BattleScene : Node3D
             view.SetHealth((float)(ra.MaxHp > 0 ? ra.Hp / ra.MaxHp : 0), ra.ShieldActive);
             view.SetMarked(ra.Marked);
         }
+    }
+
+    /// <summary>Builds and registers an ActorView the same way BuildBattle's
+    /// initial VisualRoster.Build pass does, for an actor that showed up
+    /// after the fact instead of at battle start (currently only split-on-
+    /// death children). Looks the real content def up via ra.ContentId
+    /// rather than approximating — same DisplayName/model/weapon visuals a
+    /// pre-built roster entry would have gotten. Returns null (and logs
+    /// once) if ContentId is empty or unknown, which should never happen for
+    /// a real split child — BattleSetup always sets it from the same
+    /// content.Enemies table this looks up.</summary>
+    private ActorView? TryCreateViewForUnknownActor(RenderActor ra)
+    {
+        if (string.IsNullOrEmpty(ra.ContentId) || !_game.Content.Enemies.TryGetValue(ra.ContentId, out EnemyDef? def))
+        {
+            // Warn once per id, not every frame — SyncActors runs every
+            // frame and this actor stays unresolved for as long as it's
+            // alive, which would otherwise flood the log for the entire
+            // rest of the battle instead of just flagging the problem once.
+            if (_warnedMissingContentIds.Add(ra.Id))
+            {
+                GD.PushWarning($"[Slingtt] no ActorView and no usable ContentId for actor '{ra.Id}' (contentId='{ra.ContentId}') — it will not render");
+            }
+            return null;
+        }
+
+        var visual = new ActorVisual
+        {
+            Id = ra.Id,
+            DisplayName = _game.Content.Name(def.NameKey),
+            Team = ra.Team,
+            Generator = def.Kind == "boss" ? "boss" : "enemy",
+            ModelId = def.ModelId,
+            Radius = def.Radius,
+            Tier = 0,
+            Rarity = null,
+            WeaponType = ra.WeaponType,
+            WeaponModelId = def.ModelId,
+        };
+        _visuals[ra.Id] = visual;
+
+        ActorView view = ActorView.Create(visual);
+        _actorViews[ra.Id] = view;
+        AddChild(view);
+        return view;
     }
 
     private void DrainEvents()

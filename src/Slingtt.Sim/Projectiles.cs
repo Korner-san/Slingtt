@@ -77,11 +77,26 @@ public static class Projectiles
             return;
         }
 
-        // Matches the pre-existing fallback exactly: a zero LastTravelDir
-        // (should never happen — Actor defaults it to (0,1) and launch always
-        // normalizes it) divides by 1 rather than 0, leaving it (0,0).
+        // A zero LastTravelDir (should never happen — Actor defaults it to
+        // (0,1) and launch always normalizes it) divides by 1 rather than 0.
         double dirLen = self.LastTravelDir.Length();
-        Vec2 baseDir = self.LastTravelDir * (1.0 / (dirLen == 0 ? 1 : dirLen));
+        Vec2 landingDir = self.LastTravelDir * (1.0 / (dirLen == 0 ? 1 : dirLen));
+
+        // Live-iteration request: ultimate projectiles always aim at an
+        // enemy, never just "whichever way the shot happened to be
+        // travelling" — landingDir now only ever matters as the fallback for
+        // the edge case where somehow no living enemy exists at cast time.
+        // Which enemy varies by kind, matching its own identity: Striker
+        // (precise, single-target, can't multi-hit) goes for whoever's
+        // closest; Boomerang (a wide fan) goes for the living enemies'
+        // centroid, maximizing how many its arc can catch; Grenade (see
+        // SpawnGrenade) already goes for the furthest living enemy.
+        Vec2 baseDir = spec.Kind switch
+        {
+            WeaponUltKind.Striker => DirectionToNearestOpponent(world, self, landingDir),
+            WeaponUltKind.Boomerang => DirectionToOpponentCentroid(world, self, landingDir),
+            _ => landingDir,
+        };
 
         // Carry (Light archetype): the wielder's own last-recorded travel
         // distance adds further scale, same as before.
@@ -236,6 +251,54 @@ public static class Projectiles
             }
         }
         return furthest;
+    }
+
+    private static Vec2 DirectionToNearestOpponent(World world, Actor self, Vec2 fallback)
+    {
+        Team opposing = self.Team == Team.Hero ? Team.Enemy : Team.Hero;
+        Actor? nearest = null;
+        double best = double.PositiveInfinity;
+        foreach (Actor a in world.Actors)
+        {
+            if (a.Team != opposing || !a.IsAlive || a.IsBenched)
+            {
+                continue;
+            }
+            double d = self.Pos.DistanceTo(a.Pos);
+            if (d < best)
+            {
+                best = d;
+                nearest = a;
+            }
+        }
+        return nearest is null ? fallback : DirectionTo(self.Pos, nearest.Pos, fallback);
+    }
+
+    /// <summary>The average position of every living opponent — not a real
+    /// target, just the direction that gives a fixed-width fan the best
+    /// chance of sweeping through more than one of them.</summary>
+    private static Vec2 DirectionToOpponentCentroid(World world, Actor self, Vec2 fallback)
+    {
+        Team opposing = self.Team == Team.Hero ? Team.Enemy : Team.Hero;
+        Vec2 sum = Vec2.Zero;
+        int count = 0;
+        foreach (Actor a in world.Actors)
+        {
+            if (a.Team != opposing || !a.IsAlive || a.IsBenched)
+            {
+                continue;
+            }
+            sum += a.Pos;
+            count++;
+        }
+        return count == 0 ? fallback : DirectionTo(self.Pos, sum * (1.0 / count), fallback);
+    }
+
+    private static Vec2 DirectionTo(Vec2 from, Vec2 to, Vec2 fallback)
+    {
+        Vec2 delta = to - from;
+        double len = delta.Length();
+        return len > 0 ? delta * (1.0 / len) : fallback;
     }
 
     /// <summary>Called every tick of Phase.UltimateTravel. Snapshotted before

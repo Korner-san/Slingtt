@@ -75,18 +75,37 @@ public class ProjectileUltimateTests
     }
 
     [Fact]
-    public void Striker_Direction0_IsExactlyTheLandingDirection()
+    public void Striker_FallsBackToTheLandingDirection_WhenNoLivingEnemyExists()
     {
         var ult = new WeaponUltimateSpec { Kind = WeaponUltKind.Striker, DmgMult = 1.0, BulletCount = 1, DirectionCount = 3 };
         var landingDir = new Vec2(0.6, 0.8); // arbitrary, already unit length
         Actor hero = Hero("hero", new Vec2(0, 0), landingDir, ult);
-        World w = BuildWorld(hero);
+        World w = BuildWorld(hero); // no enemies at all — the edge case landingDir exists for
 
         Projectiles.Spawn(w, Cfg(), hero);
 
         Vec2 firstBulletDir = w.Projectiles[0].Vel.Normalized();
         Assert.Equal(landingDir.X, firstBulletDir.X, precision: 9);
         Assert.Equal(landingDir.Y, firstBulletDir.Y, precision: 9);
+    }
+
+    [Fact]
+    public void Striker_AimsAtTheNearestLivingEnemy_NotTheLandingDirection()
+    {
+        var ult = new WeaponUltimateSpec { Kind = WeaponUltKind.Striker, DmgMult = 1.0, BulletCount = 1, DirectionCount = 1 };
+        // Landing direction points due north (0,1), but the nearest enemy is
+        // off to the east — the bullet should aim at the enemy, not follow
+        // the landing direction at all.
+        Actor hero = Hero("hero", new Vec2(0, 0), new Vec2(0, 1), ult);
+        Actor near = Enemy("near", new Vec2(3, 0));
+        Actor far = Enemy("far", new Vec2(0, 8));
+        World w = BuildWorld(hero, near, far);
+
+        Projectiles.Spawn(w, Cfg(), hero);
+
+        Vec2 dir = w.Projectiles[0].Vel.Normalized();
+        Assert.Equal(1.0, dir.X, precision: 9); // straight toward "near" at (3,0), i.e. +X
+        Assert.Equal(0.0, dir.Y, precision: 9);
     }
 
     [Fact]
@@ -169,16 +188,43 @@ public class ProjectileUltimateTests
     // --- Boomerang -----------------------------------------------------------------
 
     [Fact]
-    public void Boomerang_HitsInsideItsFanAngleAndRange_MissesOutsideEither_AndOnlyEverResolvesOnce()
+    public void Boomerang_AimsAtTheLivingEnemyCentroid_HittingBothOfASymmetricPair()
     {
         var ult = new WeaponUltimateSpec
         {
             Kind = WeaponUltKind.Boomerang,
             DmgMult = 1.5,
             FanRange = 4.0,
-            FanHalfAngleRadians = Math.PI / 6, // 30 degrees
+            FanHalfAngleRadians = Deg(30),
         };
-        Actor hero = Hero("hero", new Vec2(0, 0), new Vec2(0, 1), ult); // fans out toward +Y
+        // Landing direction is due north, but neither enemy sits on that
+        // axis — placed symmetrically at +/-20 degrees from it instead, so
+        // their centroid falls exactly back on the north axis (the X
+        // components cancel exactly in floating point) and the boomerang
+        // should still catch both, proving it aimed at the pair's midpoint
+        // rather than the landing direction or either enemy individually.
+        Actor hero = Hero("hero", new Vec2(0, 0), new Vec2(0, 1), ult);
+        double r = 3.0;
+        Actor left = Enemy("left", new Vec2(-r * Math.Sin(Deg(20)), r * Math.Cos(Deg(20))));
+        Actor right = Enemy("right", new Vec2(r * Math.Sin(Deg(20)), r * Math.Cos(Deg(20))));
+        World w = BuildWorld(hero, left, right);
+        SimConfig cfg = Cfg();
+
+        Projectiles.Spawn(w, cfg, hero);
+        AdvanceUntilResolved(w, cfg);
+
+        Assert.Equal(850, left.Hp);  // 100 * 1.5, Def 0
+        Assert.Equal(850, right.Hp);
+    }
+
+    [Fact]
+    public void Boomerang_HitsInsideItsFanAngleAndRange_MissesOutsideEither_AndOnlyEverResolvesOnce()
+    {
+        // Constructs the projectile directly instead of going through
+        // Spawn's own centroid targeting (covered above) — this is purely
+        // about AdvanceBoomerang's fan hit-test geometry.
+        Actor hero = Hero("hero", new Vec2(0, 0), new Vec2(0, 1),
+            new WeaponUltimateSpec { Kind = WeaponUltKind.Boomerang, DmgMult = 1.5 });
 
         // Polar around the +Y axis at radius 3 (comfortably inside FanRange 4):
         // inFan at 10 degrees off-axis (inside the 30-degree half-angle),
@@ -190,7 +236,21 @@ public class ProjectileUltimateTests
         World w = BuildWorld(hero, inFan, outFan, tooFar);
         SimConfig cfg = Cfg();
 
-        Projectiles.Spawn(w, cfg, hero);
+        var boomerang = new UltimateProjectile
+        {
+            OwnerId = "hero",
+            Team = Team.Hero,
+            Kind = ProjectileKind.Boomerang,
+            Pos = new Vec2(0, 0),
+            Vel = new Vec2(0, 1) * cfg.UltimateProjectileSpeed,
+            DmgMult = 1.5,
+            Origin = new Vec2(0, 0),
+            Dir = new Vec2(0, 1),
+            FanRange = 4.0,
+            CosFanHalfAngle = Math.Cos(Deg(30)),
+        };
+        w.Projectiles.Add(boomerang);
+
         AdvanceUntilResolved(w, cfg);
 
         Assert.Empty(w.Projectiles); // resolves exactly once, then removed — can't hit again

@@ -14,7 +14,7 @@ namespace Slingtt.Render;
 public sealed partial class AimView : Node3D
 {
     private const int MaxDots = 48;
-    private const float DotSpacing = 0.42f; // sim units between dots
+    private const float MinDotSpacing = 0.12f; // floor for a very short/slow throw
 
     private readonly MeshInstance3D[] _dots = new MeshInstance3D[MaxDots];
     private readonly StandardMaterial3D[] _dotMats = new StandardMaterial3D[MaxDots];
@@ -130,17 +130,35 @@ public sealed partial class AimView : Node3D
             return;
         }
 
-        // Resample the predicted path at a fixed arc-length so dot density reads as
-        // speed-independent; a per-tick dot would bunch up as friction slows the shot.
+        // Resample the predicted path across all MaxDots slots at spacing
+        // derived from the path's OWN total length, not a fixed constant. A
+        // fixed spacing (the old approach) ran out of dots well before a
+        // long or bouncy path finished — MaxDots * a ~0.4-unit fixed spacing
+        // covers only ~20 units, far short of what a fast, multi-bounce 60%-
+        // budget prediction can cover — which is exactly what made the trail
+        // look like it "stopped" right after an enemy bounce instead of
+        // showing where the shot goes next. Always spanning the full
+        // predicted path in exactly MaxDots dots also makes the preview's
+        // visible extent naturally track the shot's own momentum (a heavier
+        // archetype's shorter, slower predicted path gets tighter dot
+        // spacing over less distance; a lighter, faster one spreads the same
+        // dot count further) with no separate per-archetype logic needed.
         System.Collections.Generic.List<Vec2> pts = aim.Prediction.Points;
+        float totalLength = 0f;
+        for (int i = 1; i < pts.Count; i++)
+        {
+            totalLength += (float)pts[i - 1].DistanceTo(pts[i]);
+        }
+        float spacing = Mathf.Max(totalLength / MaxDots, MinDotSpacing);
+
         int used = 0;
-        float acc = DotSpacing;
+        float acc = spacing;
         for (int i = 1; i < pts.Count && used < MaxDots; i++)
         {
             var prev = new Vector2((float)pts[i - 1].X, (float)pts[i - 1].Y);
             var cur = new Vector2((float)pts[i].X, (float)pts[i].Y);
             acc += prev.DistanceTo(cur);
-            if (acc < DotSpacing)
+            if (acc < spacing)
             {
                 continue;
             }

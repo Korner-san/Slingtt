@@ -108,6 +108,13 @@ public sealed class RunState
     public int MaxFloor => _content.MaxFloor;
     public FloorResult? PendingResult { get; private set; }
 
+    /// <summary>Dev-only escape hatch (DevCapture's --floor flag): jumps
+    /// straight to a floor without actually clearing anything before it, so
+    /// deep floors (bosses, split-on-death enemies) can be verified without
+    /// scripting a full run up to them first. Never called from real
+    /// gameplay.</summary>
+    public void DebugSetFloor(int floor) => _save.CurrentFloor = Math.Clamp(floor, 1, MaxFloor);
+
     public int BalanceOf(ResourceKind kind)
         => _save.Balances.GetValueOrDefault(kind.ToString());
 

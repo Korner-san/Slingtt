@@ -246,6 +246,7 @@ public static class BattleSetup
             actors.Add(new ActorInit
             {
                 Id = $"{def.Id}#{i}",
+                ContentId = def.Id,
                 Team = Team.Enemy,
                 Pos = pos,
                 Radius = def.Radius,
@@ -300,6 +301,7 @@ public static class BattleSetup
             children.Add(new ActorInit
             {
                 Id = $"{parentId}_split{i}",
+                ContentId = childDef.Id,
                 Team = Team.Enemy,
                 Pos = pos, // Damage.SpawnSplitChildren repositions around the actual death point
                 Radius = childDef.Radius,

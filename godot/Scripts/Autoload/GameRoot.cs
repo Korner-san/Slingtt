@@ -50,6 +50,7 @@ public sealed partial class GameRoot : Node
     /// showing an empty screen — a visible error beats a grey rectangle.</summary>
     public string? FatalError { get; private set; }
 
+    public const string SplashScene = "res://scenes/SplashScreen.tscn";
     public const string MenuScene = "res://scenes/MainMenu.tscn";
     public const string BattleScene = "res://scenes/Battle.tscn";
     public const string ItemsScene = "res://scenes/ItemsScreen.tscn";

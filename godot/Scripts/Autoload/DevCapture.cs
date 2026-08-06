@@ -20,11 +20,16 @@ namespace Slingtt.Render;
 //                        mid-aim and prove out the aim-preview render (dots,
 //                        enemy-bounce prediction, ultimate footprint) instead of
 //                        only ever seeing post-release battle state
+//   --floor <n>          with --autobattle, jump straight to floor n (RunState.
+//                        DebugSetFloor) instead of always starting at floor 1 —
+//                        lets a deep floor (bosses, split-on-death enemies) be
+//                        screenshotted without scripting a whole run up to it
 public sealed partial class DevCapture : Node
 {
     public static bool AutoPlay { get; private set; }
     public static string? ItemsPage { get; private set; }
     public static double AimHoldSeconds { get; private set; }
+    public static int? Floor { get; private set; }
 
     private string? _shotPath;
     private double _delay = 1.5;
@@ -65,12 +70,23 @@ public sealed partial class DevCapture : Node
                 case "--holdaim" when i + 1 < args.Length:
                     AimHoldSeconds = args[++i].ToFloat();
                     break;
+                case "--floor" when i + 1 < args.Length:
+                    Floor = (int)args[++i].ToFloat();
+                    break;
             }
         }
 
         if (autoBattle)
         {
-            GD.Print("[DevCapture] auto-entering battle");
+            if (Floor is { } floor)
+            {
+                GameRoot.Instance?.Run.DebugSetFloor(floor);
+                GD.Print($"[DevCapture] auto-entering battle at floor {floor}");
+            }
+            else
+            {
+                GD.Print("[DevCapture] auto-entering battle");
+            }
             GameRoot.Instance?.GoToBattle();
         }
         else if (autoItems)

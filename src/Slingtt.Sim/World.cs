@@ -16,6 +16,15 @@ public sealed class ActorInit
     public int MoveDurationTicks { get; init; }
     public bool IsBenched { get; init; }
 
+    /// <summary>Opaque tag the Game layer sets to whatever content id this
+    /// actor was built from (e.g. "enm_trail_layer") — never read or
+    /// interpreted by the sim itself, same posture as Id. Exists so the
+    /// render layer can look up a proper ActorVisual for an actor it didn't
+    /// know about ahead of time, most importantly a split-on-death child
+    /// spawned mid-battle (BattleSetup never puts split children in the
+    /// initial roster VisualRoster.Build reads from).</summary>
+    public string ContentId { get; init; } = "";
+
     /// <summary>Prompt 7 — pre-resolved spawn blueprints for a split-on-death
     /// boss's children. Null for everything else.</summary>
     public List<ActorInit>? SplitOnDeath { get; init; }
@@ -119,6 +128,7 @@ public sealed class World
             MoveDurationTicks = init.MoveDurationTicks,
             IsBenched = init.IsBenched,
             SplitOnDeath = init.SplitOnDeath,
+            ContentId = init.ContentId,
         };
         Actors.Add(a);
         return a;

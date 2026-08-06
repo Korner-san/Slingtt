@@ -145,6 +145,7 @@ public static class Damage
                 MoveDurationTicks = blueprint.MoveDurationTicks,
                 IsBenched = blueprint.IsBenched,
                 SplitOnDeath = blueprint.SplitOnDeath,
+                ContentId = blueprint.ContentId,
             };
             Actor spawned = world.SpawnActor(init);
             world.Events.Add(new SimEvent
