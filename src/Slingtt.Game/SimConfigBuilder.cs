@@ -31,6 +31,8 @@ public static class SimConfigBuilder
             HammerDirectMult = s.Hammer.DirectMult,
             HammerAoeCenterMult = s.Hammer.AoeCenterMult,
             HammerAoeRimMult = s.Hammer.AoeRimMult,
+            SweepDamageMult = balance.UltimateEscalation.SweepDamageMult,
+            SweepMinBeatOffsetSeconds = balance.UltimateEscalation.SweepMinBeatOffsetSeconds,
         };
     }
 }

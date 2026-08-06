@@ -78,28 +78,15 @@ public sealed class FloorDef
     public List<FloorEnemyEntry> Enemies { get; set; } = new();
 }
 
-/// <summary>Deserialization target for a ShapeDef, one level up from the sim
-/// type — Prompt 1 moves geometry out of hardcoded C# into this JSON shape.
-/// Angles are authored in degrees for readability and converted to radians in
-/// BattleSetup. RotationOffsetDegrees and ExcludeAlreadyHit are plumbed for
-/// later prompts; no current content sets them.</summary>
-public sealed class ShapeDefDto
-{
-    public string Type { get; set; } = ""; // radial_arms | lines | rings
-    public int? ArmCount { get; set; }
-    public List<double>? LineAngleDegrees { get; set; }
-    public double? Width { get; set; }
-    public double? RotationOffsetDegrees { get; set; }
-    public double? Radius { get; set; }
-    public bool? ExcludeAlreadyHit { get; set; }
-}
-
 /// <summary>One tier row. The JSON carries only the keys relevant to the parent
-/// ultimate's kind, so every field is optional here.</summary>
+/// ultimate's kind, so every field is optional here. Geometry (Shape, as of
+/// Prompt 1) moved out as of Prompt 3 — shape structure and scale are now
+/// derived from the wielding item's RARITY (UltimateEscalationBalance), not
+/// authored per evolution tier. Tiers now carry only non-geometric effect
+/// strength (DmgMult, StunTurns) and the armor-ultimate fields.</summary>
 public sealed class UltimateTierDef
 {
     public double? DmgMult { get; set; }
-    public ShapeDefDto? Shape { get; set; } // weapon-ultimate kinds only
     public int? StunTurns { get; set; }
     public double? ShieldRatio { get; set; }
     public int? Rounds { get; set; }
@@ -112,6 +99,11 @@ public sealed class UltimateDef
     public string Id { get; set; } = "";
     public string NameKey { get; set; } = "";
     public string Kind { get; set; } = ""; // cross | beam | aftershock | bulwark | swift | vital
+    // Base shape size before the rarity scale multiplier (Prompt 3). Only one
+    // of these is meaningful per Kind: Width for cross/beam, Radius for
+    // aftershock.
+    public double? BaseWidth { get; set; }
+    public double? BaseRadius { get; set; }
     public List<UltimateTierDef> Tiers { get; set; } = new();
 }
 
@@ -176,6 +168,31 @@ public sealed class ItemRarityBalance
         => StatMultiplier.TryGetValue(rarity, out double m) ? m : 1.0;
 }
 
+// Prompt 3 — "the main mechanical payload." Structure (element count) and
+// scale (width/radius) of a weapon ultimate's shape now come from the
+// wielding item's RARITY index (0=Common..4=Legendary) via the arrays below,
+// not from evolution tier. Sweep (the per-level angular escalation) and dual
+// activation (Legendary-exclusive) constants live here too since they're the
+// same kind of "how much does this ability actually do" balance data.
+public sealed class UltimateEscalationBalance
+{
+    public List<int> ArmCountByRarityIndex { get; set; } = new() { 2, 2, 3, 3, 4 };
+    public List<int> LineCountByRarityIndex { get; set; } = new() { 1, 1, 2, 2, 3 };
+    public List<double> ScalePerRarityIndex { get; set; } = new() { 1.0, 1.15, 1.3, 1.45, 1.6 };
+    public double SweepMaxDegrees { get; set; } = 20;
+    public double SweepDamageMult { get; set; } = 0.6;
+    public double SweepMinBeatOffsetSeconds { get; set; } = 0.15;
+    public double AftershockBonusRingScale { get; set; } = 1.3;
+
+    private static int AtIndex(List<int> list, int i) => list[Math.Clamp(i, 0, list.Count - 1)];
+
+    public int ArmCountFor(int rarityIndex) => AtIndex(ArmCountByRarityIndex, rarityIndex);
+    public int LineCountFor(int rarityIndex) => AtIndex(LineCountByRarityIndex, rarityIndex);
+
+    public double ScaleFor(int rarityIndex)
+        => ScalePerRarityIndex[Math.Clamp(rarityIndex, 0, ScalePerRarityIndex.Count - 1)];
+}
+
 public sealed class ProgressionBalance
 {
     public double LevelCoeff { get; set; } = 0.06;
@@ -237,6 +254,7 @@ public sealed class Balance
     public ArenaBalance Arena { get; set; } = new();
     public SimBalance Sim { get; set; } = new();
     public ItemRarityBalance ItemRarity { get; set; } = new();
+    public UltimateEscalationBalance UltimateEscalation { get; set; } = new();
     public ProgressionBalance Progression { get; set; } = new();
     public GachaBalance Gacha { get; set; } = new();
     public RewardsBalance Rewards { get; set; } = new();

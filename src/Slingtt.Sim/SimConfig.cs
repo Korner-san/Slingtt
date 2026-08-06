@@ -27,6 +27,12 @@ public sealed class SimConfig
     public double HammerAoeCenterMult { get; init; } = 1.4;
     public double HammerAoeRimMult { get; init; } = 0.6;
 
+    // Prompt 3 — sweep/bonus-ring damage fraction and minimum stagger before
+    // its timeline beat, relative to the base activation's beat. The sweep
+    // angle itself is pre-resolved per-item on WeaponUltimateSpec, not here.
+    public double SweepDamageMult { get; init; } = 0.6;
+    public double SweepMinBeatOffsetSeconds { get; init; } = 0.15;
+
     public double Dt => 1.0 / TickRate;
 
     private double _frictionPerTick = double.NaN;

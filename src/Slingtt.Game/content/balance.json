@@ -30,6 +30,15 @@
       "Legendary": 2.1
     }
   },
+  "ultimateEscalation": {
+    "armCountByRarityIndex": [2, 2, 3, 3, 4],
+    "lineCountByRarityIndex": [1, 1, 2, 2, 3],
+    "scalePerRarityIndex": [1.0, 1.15, 1.3, 1.45, 1.6],
+    "sweepMaxDegrees": 20,
+    "sweepDamageMult": 0.6,
+    "sweepMinBeatOffsetSeconds": 0.15,
+    "aftershockBonusRingScale": 1.3
+  },
   "progression": {
     "levelCoeff": 0.06,
     "maxLevel": 30,

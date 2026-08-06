@@ -37,64 +37,112 @@ public static class BattleSetup
         _ => WeaponType.Sword,
     };
 
-    /// <summary>ShapeDefDto (JSON, degrees) -> ShapeDef (sim, radians). A missing
-    /// dto (an ultimate kind with no shape authored) yields default(ShapeDef) —
-    /// callers only reach that for armor kinds, which never look at Shape.</summary>
-    private static ShapeDef ToShapeDef(ShapeDefDto? dto, double defaultWidth = 1, double defaultRadius = 2)
+    // Prompt 3 — shape structure (element count) and scale (width/radius) come
+    // from the wielding item's RARITY index, not evolution tier. Both grow
+    // together with rarity, per the arrays in UltimateEscalationBalance.
+    private static ShapeDef BuildShape(string kind, int rarityIdx, double? baseWidth, double? baseRadius, UltimateEscalationBalance esc)
     {
-        if (dto is null)
+        double scale = esc.ScaleFor(rarityIdx);
+        return kind switch
         {
-            return default;
-        }
-        ShapeType type = dto.Type switch
-        {
-            "lines" => ShapeType.Lines,
-            "rings" => ShapeType.Rings,
-            _ => ShapeType.RadialArms,
-        };
-        List<double>? lineAngles = dto.LineAngleDegrees?.ConvertAll(d => d * Math.PI / 180.0);
-        return new ShapeDef
-        {
-            Type = type,
-            ArmCount = dto.ArmCount ?? 2,
-            LineAngles = lineAngles,
-            Width = dto.Width ?? defaultWidth,
-            RotationOffset = (dto.RotationOffsetDegrees ?? 0) * Math.PI / 180.0,
-            Radius = dto.Radius ?? defaultRadius,
-            ExcludeAlreadyHit = dto.ExcludeAlreadyHit ?? false,
+            "cross" => new ShapeDef
+            {
+                Type = ShapeType.RadialArms,
+                ArmCount = esc.ArmCountFor(rarityIdx),
+                Width = (baseWidth ?? 1) * scale,
+            },
+            "beam" => new ShapeDef
+            {
+                Type = ShapeType.Lines,
+                LineAngles = EvenlySpacedAngles(esc.LineCountFor(rarityIdx)),
+                Width = (baseWidth ?? 1) * scale,
+            },
+            "aftershock" => new ShapeDef
+            {
+                Type = ShapeType.Rings,
+                Radius = (baseRadius ?? 2) * scale,
+            },
+            _ => default,
         };
     }
 
-    private static WeaponUltimateSpec? WeaponUltSpec(UltimateDef def, int tier)
+    /// <summary>count bidirectional lines spaced 180°/count apart, starting at
+    /// 0 — count=1 is just the base direction, count=2 matches the old
+    /// primary+perpendicular-secondary pair exactly.</summary>
+    private static List<double> EvenlySpacedAngles(int count)
     {
+        count = Math.Max(count, 1);
+        double step = Math.PI / count;
+        var angles = new List<double>(count);
+        for (int i = 0; i < count; i++)
+        {
+            angles.Add(i * step);
+        }
+        return angles;
+    }
+
+    /// <summary>The angular gap between a shape's own elements — what the sweep
+    /// (Prompt 3) is a fraction of. Rings has no elements to have a gap between;
+    /// callers never ask it for one (Aftershock's escalation is concentric
+    /// rings, not a sweep angle).</summary>
+    private static double ElementGapDegrees(ShapeDef shape)
+    {
+        int count = shape.Type switch
+        {
+            ShapeType.RadialArms => Math.Max(shape.ArmCount, 1),
+            ShapeType.Lines => Math.Max(shape.LineAngles?.Count ?? 1, 1),
+            _ => 1,
+        };
+        return 180.0 / count;
+    }
+
+    private static WeaponUltimateSpec? WeaponUltSpec(Content content, UltimateDef def, WeaponDef weapon, int level)
+    {
+        int tier = Formulas.EvolutionTier(level); // still gates unlock (>=10) and DmgMult/StunTurns
         if (tier < 1 || def.Tiers.Count == 0)
         {
             return null;
         }
         int i = Math.Min(Math.Min(tier, 3) - 1, def.Tiers.Count - 1);
         UltimateTierDef t = def.Tiers[i];
-        return def.Kind switch
+
+        WeaponUltKind? kind = def.Kind switch
         {
-            "cross" => new WeaponUltimateSpec
-            {
-                Kind = WeaponUltKind.Cross,
-                Shape = ToShapeDef(t.Shape, defaultWidth: 1),
-                DmgMult = t.DmgMult ?? 1,
-            },
-            "beam" => new WeaponUltimateSpec
-            {
-                Kind = WeaponUltKind.Beam,
-                Shape = ToShapeDef(t.Shape, defaultWidth: 1),
-                DmgMult = t.DmgMult ?? 1,
-            },
-            "aftershock" => new WeaponUltimateSpec
-            {
-                Kind = WeaponUltKind.Aftershock,
-                Shape = ToShapeDef(t.Shape, defaultRadius: 2),
-                DmgMult = t.DmgMult ?? 1,
-                StunTurns = t.StunTurns ?? 0,
-            },
+            "cross" => WeaponUltKind.Cross,
+            "beam" => WeaponUltKind.Beam,
+            "aftershock" => WeaponUltKind.Aftershock,
             _ => null, // armor kinds are not weapon ultimates
+        };
+        if (kind is null)
+        {
+            return null;
+        }
+
+        ItemRarityBalance rarityBalance = content.Balance.ItemRarity;
+        UltimateEscalationBalance esc = content.Balance.UltimateEscalation;
+        int rarityIdx = Math.Max(0, rarityBalance.Order.IndexOf(weapon.Rarity));
+        ShapeDef shape = BuildShape(def.Kind, rarityIdx, def.BaseWidth, def.BaseRadius, esc);
+
+        // Sweep is a fraction of the shape's own inter-element gap, ramping
+        // linearly across the item's raw level (1..30), capped at
+        // SweepMaxDegrees. Aftershock has no angle to sweep — its escalation is
+        // the concentric ring handled entirely in Ultimates.cs.
+        double sweepDegrees = 0;
+        if (kind != WeaponUltKind.Aftershock)
+        {
+            double levelFraction = Math.Clamp((level - 1) / 29.0, 0, 1);
+            sweepDegrees = Math.Min(esc.SweepMaxDegrees, levelFraction * ElementGapDegrees(shape));
+        }
+
+        return new WeaponUltimateSpec
+        {
+            Kind = kind.Value,
+            Shape = shape,
+            DmgMult = t.DmgMult ?? 1,
+            StunTurns = t.StunTurns ?? 0,
+            SweepDegrees = sweepDegrees,
+            SweepBidirectional = tier >= 1, // any evolution gate reached (level >= 10)
+            DualActivation = weapon.Rarity == "Legendary",
         };
     }
 
@@ -173,7 +221,7 @@ public static class BattleSetup
             BounceDecay = weapon.BounceDecay ?? 0.1,
             PierceCount = weapon.PierceCount ?? 1,
             AoeRadius = weapon.AoeRadius ?? 1,
-            Ultimate = weaponUltDef is null ? null : WeaponUltSpec(weaponUltDef, wTier),
+            Ultimate = weaponUltDef is null ? null : WeaponUltSpec(content, weaponUltDef, weapon, slot.WeaponLevel),
         };
 
         ArenaBalance arena = content.Balance.Arena;

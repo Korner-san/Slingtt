@@ -60,13 +60,29 @@ public enum EndReason
 /// (arm count, line angles, width, radius) lives entirely in Shape as of Prompt 1
 /// — Kind is kept because it still selects non-geometric behaviour (Aftershock's
 /// stun) and because it's what content authoring keys off of; DmgMult/StunTurns
-/// are effect parameters, not shape.</summary>
+/// are effect parameters, not shape.
+///
+/// Prompt 3 adds three pre-resolved escalation values, computed once in
+/// BattleSetup from the wielding item's level and rarity (never recomputed by
+/// the sim itself — the sim just reads what it's told, same determinism
+/// posture as everything else here):
+/// SweepDegrees — already fraction-of-gap-and-20°-cap resolved; 0 means no
+/// sweep pass fires at all.
+/// SweepBidirectional — true at evolution gates (level 10/20/30): sweep fires
+/// both clockwise and counter-clockwise instead of clockwise only (Cross/Beam),
+/// or two bonus rings instead of one (Aftershock).
+/// DualActivation — true only when the wielding item's rarity is Legendary:
+/// the whole ultimate fires a second, full-strength, unfiltered time after the
+/// base activation (and its sweep) resolve.</summary>
 public readonly struct WeaponUltimateSpec
 {
     public WeaponUltKind Kind { get; init; }
     public ShapeDef Shape { get; init; }
     public double DmgMult { get; init; }
     public int StunTurns { get; init; }
+    public double SweepDegrees { get; init; }
+    public bool SweepBidirectional { get; init; }
+    public bool DualActivation { get; init; }
 }
 
 /// <summary>Discriminated-union stand-in for the TS ArmorUltimateSpec.</summary>
