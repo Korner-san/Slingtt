@@ -38,7 +38,8 @@
     "sweepMaxDegrees": 20,
     "sweepDamageMult": 0.6,
     "sweepMinBeatOffsetSeconds": 0.15,
-    "aftershockBonusRingScale": 1.3
+    "aftershockBonusRingScale": 1.3,
+    "timelineBudgetSeconds": 1.8
   },
   "bench": {
     "regenPctPerTurn": 0.05

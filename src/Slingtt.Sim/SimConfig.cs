@@ -33,6 +33,16 @@ public sealed class SimConfig
     public double SweepDamageMult { get; init; } = 0.6;
     public double SweepMinBeatOffsetSeconds { get; init; } = 0.15;
 
+    // Prompt 11 — "post-landing resolution capped at 1800ms worst case at 1x
+    // speed": the hard ceiling on a ResolutionTimeline's total span. A shape
+    // with enough targets (or enough waves — sweep rings, dual activation)
+    // that the raw HitBeatStaggerSeconds/SweepMinBeatOffsetSeconds spacing
+    // would blow past this gets every beat's offset rescaled down together at
+    // the end of Ultimates.FireWeaponUltimate, which is what makes the
+    // stagger compress with target count and makes aftershock's two rings
+    // share one budget instead of each getting their own.
+    public double TimelineBudgetSeconds { get; init; } = 1.8;
+
     // Prompt 4 — fraction of max HP a benched hero regenerates every turn (any
     // actor's turn, hero or enemy — see TurnOrder.AdvanceRoundRobin).
     public double BenchRegenPctPerTurn { get; init; } = 0.05;

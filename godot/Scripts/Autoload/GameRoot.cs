@@ -40,6 +40,12 @@ public sealed partial class GameRoot : Node
     public Sfx Sfx { get; private set; } = null!;
     public IAdProvider AdProvider { get; private set; } = null!;
 
+    /// <summary>Prompt 11 — the player's chosen battle playback speed (1 / 1.5 /
+    /// 2), applied to Engine.TimeScale by BattleScene. Kept here, not on
+    /// BattleScene, so it survives the full scene reload OnContinue/OnRestart
+    /// do between floors instead of resetting to 1x every floor.</summary>
+    public float BattleSpeed { get; set; } = 1f;
+
     /// <summary>Set when content fails to load. The menu surfaces this instead of
     /// showing an empty screen — a visible error beats a grey rectangle.</summary>
     public string? FatalError { get; private set; }

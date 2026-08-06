@@ -14,6 +14,7 @@ public sealed partial class BattleHud : CanvasLayer
     public event Action? RestartPressed;
     public event Action? ContinuePressed;
     public event Action? SwapPressed;
+    public event Action? SpeedPressed;
 
     private Label _floorLabel = null!;
     private Label _roundLabel = null!;
@@ -21,6 +22,7 @@ public sealed partial class BattleHud : CanvasLayer
     private Label _activeLabel = null!;
     private Label _hintLabel = null!;
     private Button _swapBtn = null!;
+    private Button _speedBtn = null!;
     private HBoxContainer _turnStrip = null!;
     private Control _overlay = null!;
     private VBoxContainer _overlayBody = null!;
@@ -66,6 +68,13 @@ public sealed partial class BattleHud : CanvasLayer
 
         _comboLabel = UiKit.MakeLabel("", 18, Palette.RarityLegendary, HorizontalAlignment.Right);
         topRow.AddChild(_comboLabel);
+
+        // Prompt 11 — "speed toggle at 1x / 1.5x / 2x": BattleScene owns the
+        // actual Engine.TimeScale cycling and just tells us what to display.
+        _speedBtn = UiKit.MakeButton("1×", Palette.UiSurfaceRaised, primary: false, fontSize: 18);
+        _speedBtn.CustomMinimumSize = new Vector2(64, UiKit.TouchMin);
+        _speedBtn.Pressed += () => SpeedPressed?.Invoke();
+        topRow.AddChild(_speedBtn);
 
         Button menuBtn = UiKit.MakeButton("MENU", Palette.UiSurfaceRaised, primary: false, fontSize: 18);
         menuBtn.CustomMinimumSize = new Vector2(96, UiKit.TouchMin);
@@ -137,6 +146,10 @@ public sealed partial class BattleHud : CanvasLayer
     }
 
     // --- per-frame updates --------------------------------------------------
+
+    /// <summary>Prompt 11 — reflects the current Engine.TimeScale BattleScene
+    /// just applied; this class never sets TimeScale itself.</summary>
+    public void SetSpeedLabel(float speed) => _speedBtn.Text = speed == (int)speed ? $"{(int)speed}×" : $"{speed}×";
 
     public void SetFloor(int floor, bool isBoss)
     {

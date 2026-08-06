@@ -201,6 +201,11 @@ public sealed class UltimateEscalationBalance
     public double SweepMinBeatOffsetSeconds { get; set; } = 0.15;
     public double AftershockBonusRingScale { get; set; } = 1.3;
 
+    // Prompt 11 — "post-landing resolution capped at 1800ms worst case at 1x
+    // speed." Same kind of balance number as the two fields above (it shapes
+    // ResolutionTimeline beat spacing), so it lives alongside them.
+    public double TimelineBudgetSeconds { get; set; } = 1.8;
+
     private static int AtIndex(List<int> list, int i) => list[Math.Clamp(i, 0, list.Count - 1)];
 
     public int ArmCountFor(int rarityIndex) => AtIndex(ArmCountByRarityIndex, rarityIndex);

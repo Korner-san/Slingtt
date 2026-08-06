@@ -13,6 +13,20 @@ public sealed partial class BattleScene : Node3D
 {
     private const float ActorHeight = 0.5f; // the plane the sling is dragged on
 
+    // Prompt 11 — "speed toggle at 1x / 1.5x / 2x via Engine.time_scale so
+    // physics and animation stay locked": a single global engine scalar
+    // instead of separately scaling the sim's delta and the render layer's —
+    // everything reading `delta` (BattleController.Advance, VfxView's clock,
+    // Tweens) speeds up together by construction, nothing to keep in sync.
+    private static readonly float[] SpeedSteps = { 1f, 1.5f, 2f };
+
+    // Prompt 11 — "enemy turns at 1.3x player speed, telegraphs exempt": a
+    // render-side-only multiplier applied to a WeaponUltimate's "hit" beats
+    // when the caster is an enemy (never its "shape"/telegraph beats). This
+    // is a presentation choice, not a sim rule, so it lives here rather than
+    // in Ultimates.cs alongside the sim's own TimelineBudgetSeconds clamp.
+    private const double EnemyTurnSpeedMultiplier = 1.3;
+
     private GameRoot _game = null!;
     private BattleController _controller = null!;
     private Camera3D _camera = null!;
@@ -134,13 +148,38 @@ public sealed partial class BattleScene : Node3D
         _hud.RestartPressed += OnRestart;
         _hud.ContinuePressed += OnContinue;
         _hud.SwapPressed += OnSwap;
+        _hud.SpeedPressed += OnSpeedToggle;
         AddChild(_hud);
 
         FloorClassification cls = Rewards.Classify(floor, _game.Content.Balance.Progression);
         _hud.SetFloor(floor, cls.IsBoss);
         _resolved = false;
 
+        // Prompt 11 — the player's chosen speed persists across floors
+        // (GameRoot.BattleSpeed survives the scene reload OnContinue/
+        // OnRestart does); re-applied fresh every time this scene builds
+        // rather than trusted to still be set from a previous instance.
+        Engine.TimeScale = _game.BattleSpeed;
+        _hud.SetSpeedLabel(_game.BattleSpeed);
+
         SyncActors();
+    }
+
+    public override void _ExitTree()
+    {
+        // Reset the global scalar so it never leaks into the menu/armory
+        // screens, which have no speed control of their own and would
+        // otherwise just run their animations too fast.
+        Engine.TimeScale = 1.0;
+    }
+
+    private void OnSpeedToggle()
+    {
+        int idx = Array.IndexOf(SpeedSteps, _game.BattleSpeed);
+        float next = SpeedSteps[(idx + 1) % SpeedSteps.Length];
+        _game.BattleSpeed = next;
+        Engine.TimeScale = next;
+        _hud.SetSpeedLabel(next);
     }
 
     // --- loop ---------------------------------------------------------------
@@ -321,6 +360,12 @@ public sealed partial class BattleScene : Node3D
             return;
         }
 
+        // Prompt 11 — "enemy turns at 1.3x player speed, telegraphs exempt":
+        // only the "hit" beats below get divided by this; "shape" beats keep
+        // their sim-scheduled offset untouched.
+        bool casterIsEnemy = _visuals.TryGetValue(ultEvent.ActorId, out ActorVisual? caster) && caster.Team == Team.Enemy;
+        double hitSpeedDivisor = casterIsEnemy ? EnemyTurnSpeedMultiplier : 1.0;
+
         int hitBeatsNeeded = 0;
         foreach (TimelineBeat b in timeline.Beats)
         {
@@ -352,7 +397,7 @@ public sealed partial class BattleScene : Node3D
             else if (beat.Kind == "hit" && hitIndex < hitEventsInOrder.Count)
             {
                 SimEvent hitEv = hitEventsInOrder[hitIndex++];
-                _vfx.Defer(beat.OffsetSeconds, () => PlayHit(hitEv));
+                _vfx.Defer(beat.OffsetSeconds / hitSpeedDivisor, () => PlayHit(hitEv));
             }
         }
     }
@@ -375,7 +420,18 @@ public sealed partial class BattleScene : Node3D
                 {
                     if (_dragTouchIndex == -1)
                     {
-                        BeginDrag(touch.Index, touch.Position);
+                        if (_controller.IsAwaitingHeroInput())
+                        {
+                            BeginDrag(touch.Index, touch.Position);
+                        }
+                        else
+                        {
+                            // Prompt 11 — "tap-to-advance that never skips
+                            // damage": outside the player's own aiming turn, a
+                            // tap collapses whatever's still queued in the
+                            // deferred VFX playback instead of doing nothing.
+                            _vfx.FlushDeferred();
+                        }
                     }
                 }
                 else if (touch.Index == _dragTouchIndex)

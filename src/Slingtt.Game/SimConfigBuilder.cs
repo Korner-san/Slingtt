@@ -33,6 +33,7 @@ public static class SimConfigBuilder
             HammerAoeRimMult = s.Hammer.AoeRimMult,
             SweepDamageMult = balance.UltimateEscalation.SweepDamageMult,
             SweepMinBeatOffsetSeconds = balance.UltimateEscalation.SweepMinBeatOffsetSeconds,
+            TimelineBudgetSeconds = balance.UltimateEscalation.TimelineBudgetSeconds,
             BenchRegenPctPerTurn = balance.Bench.RegenPctPerTurn,
             SiphonRatio = balance.Archetype.SiphonRatio,
             SiphonCapPctMaxHp = balance.Archetype.SiphonCapPctMaxHp,

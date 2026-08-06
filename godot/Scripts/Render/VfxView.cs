@@ -184,6 +184,26 @@ public sealed partial class VfxView : Node3D
     public void Defer(double delaySeconds, Action action)
         => _deferred.Add((_clock + (float)delaySeconds, action));
 
+    /// <summary>Prompt 11 — "tap-to-advance that never skips damage": runs
+    /// every still-pending deferred action right now, in the order it was
+    /// scheduled, instead of waiting out its OffsetSeconds. Nothing is
+    /// dropped — every damage number, heal, and telegraph a tap skips ahead
+    /// of still plays, just without the wait.</summary>
+    public void FlushDeferred()
+    {
+        if (_deferred.Count == 0)
+        {
+            return;
+        }
+        _deferred.Sort((a, b) => a.FireAt.CompareTo(b.FireAt));
+        var due = new List<(float FireAt, Action Action)>(_deferred);
+        _deferred.Clear();
+        foreach ((float _, Action action) in due)
+        {
+            action();
+        }
+    }
+
     /// <summary>Prompt 10 — "trail visuals": called every frame from
     /// BattleScene.SyncActors' sibling sync pass with the controller's live
     /// hazard list. Index-matched against the pool, not id-stable — a hazard

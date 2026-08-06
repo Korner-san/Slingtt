@@ -120,6 +120,32 @@ public static class Ultimates
             FireShapeQuery(world, cfg, self, spec, shape, baseDir, spec.DmgMult,
                 exclude: null, applyStun: true, timeline, ref timeCursor, new HashSet<string>());
         }
+
+        ClampToBudget(timeline, cfg.TimelineBudgetSeconds);
+    }
+
+    /// <summary>Prompt 11 — rescales every beat's OffsetSeconds down together so
+    /// the whole timeline (base + sweep/rings + dual activation, all of it — one
+    /// shared budget, not one per wave) never exceeds cfg.TimelineBudgetSeconds.
+    /// A no-op when the raw stagger already fits. Beats stay in the same relative
+    /// order and proportion, just compressed, so more targets naturally means a
+    /// tighter per-hit gap instead of the whole sequence running long.</summary>
+    private static void ClampToBudget(ResolutionTimeline timeline, double budgetSeconds)
+    {
+        if (timeline.Beats.Count == 0)
+        {
+            return;
+        }
+        double lastOffset = timeline.Beats[^1].OffsetSeconds;
+        if (lastOffset <= budgetSeconds || lastOffset <= 0)
+        {
+            return;
+        }
+        double scale = budgetSeconds / lastOffset;
+        for (int i = 0; i < timeline.Beats.Count; i++)
+        {
+            timeline.Beats[i] = timeline.Beats[i] with { OffsetSeconds = timeline.Beats[i].OffsetSeconds * scale };
+        }
     }
 
     /// <summary>One shape query: a "shape" telegraph beat at timeCursor, then a
