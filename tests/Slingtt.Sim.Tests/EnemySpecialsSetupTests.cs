@@ -120,5 +120,12 @@ public class EnemySpecialsSetupTests
         }
 
         Assert.Equal(Phase.Ended, controller.Phase);
+
+        // Prompt 12 — floors 6-15's real balance pass. Reaching Ended alone
+        // only proves the content doesn't crash the sim; a floor that
+        // reliably beats the reference kit (this loadout, the same one
+        // Prompt 7 used to verify floor 1) would still pass that check while
+        // being unplayable. Winning is the actual bar.
+        Assert.Equal(Team.Hero, controller.Winner);
     }
 }
