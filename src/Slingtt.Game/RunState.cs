@@ -70,6 +70,11 @@ public sealed class RunSave
     public Dictionary<string, int> Balances { get; set; } = new();
     /// <summary>Grant ids already paid out, so a crash mid-results can't double-grant.</summary>
     public List<string> GrantedIds { get; set; } = new();
+
+    /// <summary>Prompt 8 — gacha meta-progression (pity, pieces, tokens,
+    /// inventory, essence). Carried forward across a "new run" the same way
+    /// currency balances are (see RunState.ResetRun).</summary>
+    public GachaSave Gacha { get; set; } = new();
 }
 
 // Local run + meta-progression state. Persists so a resumed run keeps its place,
@@ -118,6 +123,58 @@ public sealed class RunState
     public uint SeedForFloor(int floor)
         => unchecked(_save.SeedBase ^ (uint)(floor * 0x9E3779B9));
 
+    // --- Prompt 8: gacha economy ---------------------------------------------
+    // Thin wrappers over GachaEconomy (pure, content+GachaSave only): this is
+    // the one place that also touches the SlingCores balance (Tier 1's pull
+    // cost lives in the same ResourceKind system floor rewards use) and
+    // persistence. Tier 2/3 pulls are gated entirely by their own tokens, so
+    // they never touch SlingCores at all.
+
+    public int EssenceBalanceOf(GachaTab tab) => GachaEconomy.EssenceBalanceOf(_save.Gacha, tab);
+
+    public GachaTabState GachaTabStateOf(GachaTab tab) => GachaEconomy.TabOf(_save.Gacha, tab);
+
+    public PullResult Pull(GachaTab tab, GachaTier tier)
+    {
+        if (tier == GachaTier.Tier1)
+        {
+            int cost = _content.Balance.Gacha.Tier1PullCost;
+            int have = BalanceOf(ResourceKind.SlingCores);
+            if (have < cost)
+            {
+                return new PullResult { Success = false, FailureReason = "insufficient-sling-cores" };
+            }
+            _save.Balances[ResourceKind.SlingCores.ToString()] = have - cost;
+        }
+
+        PullResult result = GachaEconomy.Pull(_content, _save.Gacha, tab, tier);
+        if (result.Success)
+        {
+            Persist();
+        }
+        return result;
+    }
+
+    public SacrificeResult Sacrifice(GachaTab tab, string instanceId, GachaTab receiveInvestedAs)
+    {
+        SacrificeResult result = GachaEconomy.Sacrifice(_content, _save.Gacha, tab, instanceId, receiveInvestedAs);
+        if (result.Success)
+        {
+            Persist();
+        }
+        return result;
+    }
+
+    public EnhanceResult Enhance(GachaTab tab, string instanceId)
+    {
+        EnhanceResult result = GachaEconomy.Enhance(_content, _save.Gacha, tab, instanceId, _content.Balance.Progression.MaxLevel);
+        if (result.Success)
+        {
+            Persist();
+        }
+        return result;
+    }
+
     private void LoadOrCreate()
     {
         string? raw = _store.Load();
@@ -155,6 +212,7 @@ public sealed class RunState
             CurrentFloor = 1,
             SeedBase = unchecked((uint)DateTime.UtcNow.Ticks),
             Team = BattleSetup.DefaultTeam(),
+            Gacha = new GachaSave { RngState = unchecked((uint)(DateTime.UtcNow.Ticks >> 3)) },
         };
         if (keepMeta)
         {
@@ -162,6 +220,7 @@ public sealed class RunState
             next.FirstClears = _save.FirstClears;
             next.Balances = _save.Balances;
             next.GrantedIds = _save.GrantedIds;
+            next.Gacha = _save.Gacha;
         }
         _save = next;
         PendingResult = null;

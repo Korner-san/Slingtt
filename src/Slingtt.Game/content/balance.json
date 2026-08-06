@@ -66,12 +66,21 @@
     "checkpointEvery": 10
   },
   "gacha": {
-    "rates": { "SSR": 0.03, "SR": 0.12, "R": 0.85 },
-    "tenPullGuarantee": "SR",
-    "softPityStart": 60,
-    "hardPity": 80,
-    "singlePullCost": 100,
-    "tenPullCost": 900
+    "tierRates": [
+      { "common": 0.50, "uncommon": 0.30, "rare": 0.15, "epic": 0.045, "legendary": 0.005 },
+      { "common": 0.20, "uncommon": 0.30, "rare": 0.30, "epic": 0.15, "legendary": 0.05 },
+      { "common": 0.05, "uncommon": 0.15, "rare": 0.30, "epic": 0.35, "legendary": 0.15 }
+    ],
+    "pityPullsForLegendary": 80,
+    "tier1PullCost": 100,
+    "tier1TenPullCost": 900,
+    "piecesPerToken": 3,
+    "tier1ToTier3TrickleChance": 0.03,
+    "essenceValueByRarityIndex": [10, 25, 60, 150, 400],
+    "enhanceBaseCostByRarityIndex": [20, 45, 100, 220, 500],
+    "enhanceCostLevelGrowthPct": 0.08,
+    "sameClassRefundPct": 1.0,
+    "crossClassRefundPct": 0.6
   },
   "rewards": {
     "floorClear": {

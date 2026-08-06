@@ -251,21 +251,68 @@ public sealed class ProgressionBalance
     public int CheckpointEvery { get; set; } = 10;
 }
 
-public sealed class GachaRates
+// Prompt 8 — one rarity weight table per gacha tier. Weights are read as
+// literal probabilities (should sum to 1.0 per table, not enforced/normalized
+// — a content bug here should show up as a visibly wrong drop rate, not get
+// silently smoothed over).
+public sealed class RarityRateTable
 {
-    public double SSR { get; set; }
-    public double SR { get; set; }
-    public double R { get; set; }
+    public double Common { get; set; }
+    public double Uncommon { get; set; }
+    public double Rare { get; set; }
+    public double Epic { get; set; }
+    public double Legendary { get; set; }
+
+    public double For(string rarity) => rarity switch
+    {
+        "Common" => Common,
+        "Uncommon" => Uncommon,
+        "Rare" => Rare,
+        "Epic" => Epic,
+        "Legendary" => Legendary,
+        _ => 0,
+    };
 }
 
+// Prompt 8 — the restructured gacha: two independent tabs (weapon, armor),
+// three tiers per tab gated by tokens crafted from pieces every pull grants
+// toward the tier above. See GachaEconomy.cs for the mechanics themselves;
+// this is purely the tuning data.
 public sealed class GachaBalance
 {
-    public GachaRates Rates { get; set; } = new();
-    public string TenPullGuarantee { get; set; } = "SR";
-    public int SoftPityStart { get; set; } = 60;
-    public int HardPity { get; set; } = 80;
-    public int SinglePullCost { get; set; } = 100;
-    public int TenPullCost { get; set; } = 900;
+    /// <summary>Index 0/1/2 = Tier 1/2/3. Same table for both tabs — tier
+    /// (not tab) is what changes the odds; tab only changes which item pool
+    /// a hit rarity draws from.</summary>
+    public List<RarityRateTable> TierRates { get; set; } = new() { new(), new(), new() };
+
+    /// <summary>Pulls since this tab's last Legendary (any tier) before the
+    /// next pull is guaranteed one. Hard pity only — no soft ramp.</summary>
+    public int PityPullsForLegendary { get; set; } = 80;
+
+    public int Tier1PullCost { get; set; } = 100;
+    public int Tier1TenPullCost { get; set; } = 900;
+
+    /// <summary>3 pieces craft 1 token (of the same target tier), automatically.</summary>
+    public int PiecesPerToken { get; set; } = 3;
+
+    /// <summary>Chance a Tier 1 pull's piece grant jumps straight to a Tier 3
+    /// piece instead of the normal Tier 2 piece.</summary>
+    public double Tier1ToTier3TrickleChance { get; set; } = 0.03;
+
+    /// <summary>Index 0-4 = Common..Legendary. Sacrificing an item always
+    /// grants this much of its own tab's essence, regardless of which class
+    /// the item's invested-essence refund (if any) is redirected to.</summary>
+    public List<int> EssenceValueByRarityIndex { get; set; } = new() { 10, 25, 60, 150, 400 };
+
+    /// <summary>Index 0-4 = Common..Legendary. EnhanceCostLevelGrowthPct
+    /// compounds this per current level, so pushing a high-level item further
+    /// costs more than the same rarity at level 1.</summary>
+    public List<int> EnhanceBaseCostByRarityIndex { get; set; } = new() { 20, 45, 100, 220, 500 };
+
+    public double EnhanceCostLevelGrowthPct { get; set; } = 0.08;
+
+    public double SameClassRefundPct { get; set; } = 1.0;
+    public double CrossClassRefundPct { get; set; } = 0.6;
 }
 
 public sealed class FloorClearRewards

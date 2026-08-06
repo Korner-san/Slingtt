@@ -142,18 +142,18 @@ public static class Rewards
             outp.Add(new Milestone { Kind = MilestoneKind.EvolutionCoreAcquired, Amount = rewards.EvolutionCores });
         }
 
-        if (slingCores >= gacha.TenPullCost)
+        if (slingCores >= gacha.Tier1TenPullCost)
         {
             outp.Add(new Milestone { Kind = MilestoneKind.EnoughForPull });
         }
-        else if (slingCores >= gacha.SinglePullCost)
+        else if (slingCores >= gacha.Tier1PullCost)
         {
             outp.Add(new Milestone { Kind = MilestoneKind.EnoughForPull });
-            outp.Add(new Milestone { Kind = MilestoneKind.CoresUntilTenPull, Amount = gacha.TenPullCost - slingCores });
+            outp.Add(new Milestone { Kind = MilestoneKind.CoresUntilTenPull, Amount = gacha.Tier1TenPullCost - slingCores });
         }
         else
         {
-            outp.Add(new Milestone { Kind = MilestoneKind.CoresUntilTenPull, Amount = gacha.TenPullCost - slingCores });
+            outp.Add(new Milestone { Kind = MilestoneKind.CoresUntilTenPull, Amount = gacha.Tier1TenPullCost - slingCores });
         }
 
         if (evoOre >= balance.Rewards.Milestones.EvoOreUpgradeThreshold)
