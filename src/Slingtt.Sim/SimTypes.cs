@@ -50,6 +50,18 @@ public enum ArmorUltKind
     Vital,
 }
 
+/// <summary>Prompt 6 — the archetype IS the trait selector: Heavy grants
+/// Siphon (Damage.Apply), Balanced grants Focus (BattleController's aim
+/// preview, Game-layer only), Light grants Carry (Ultimates.FireWeaponUltimate).
+/// Balanced sorts first so an unset/default ArmorStats reads as the neutral
+/// archetype rather than accidentally granting a trait.</summary>
+public enum ArmorArchetype
+{
+    Balanced,
+    Heavy,
+    Light,
+}
+
 public enum EndReason
 {
     Elimination,
@@ -113,6 +125,11 @@ public sealed class ArmorStats
     public int MoveDurationTicks { get; init; }
     public int Tier { get; init; }
     public ArmorUltimateSpec? Ultimate { get; init; }
+
+    /// <summary>Prompt 6 — pre-resolved by BattleSetup from the item's authored
+    /// archetype; the sim never looks at content, it just reads which trait this
+    /// wearer has.</summary>
+    public ArmorArchetype Archetype { get; init; }
 }
 
 public sealed class Actor
@@ -155,6 +172,18 @@ public sealed class Actor
     /// <summary>Plumbed for Prompt 7 ("marked"); always false until then. A
     /// marked hero can never be the target of a Prompt 5 contact combo.</summary>
     public bool IsMarked;
+
+    /// <summary>Prompt 6 — Carry (Light archetype): accumulated path length
+    /// (not straight-line displacement — every sub-tick delta, so wall bounces
+    /// count) travelled this launch. Reset on every launch, read when the
+    /// wielder's ultimate fires, whatever triggered it.</summary>
+    public double DistanceTravelledThisTravel;
+
+    /// <summary>Prompt 6 — Siphon (Heavy archetype): cumulative lifesteal
+    /// already granted this turn-window, capped by SimConfig.SiphonCapPctMaxHp.
+    /// Reset every turn (TurnOrder), not every launch — a combo-triggered
+    /// arrival ultimate on a hero mid-bench-wait still shares the same cap.</summary>
+    public double SiphonHealedThisTurn;
 
     public bool IsAlive => Hp > 0;
 

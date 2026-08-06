@@ -42,6 +42,15 @@
   "bench": {
     "regenPctPerTurn": 0.05
   },
+  "archetype": {
+    "moveDurationRarityStepPct": 0.05,
+    "siphonRatio": 0.25,
+    "siphonCapPctMaxHp": 0.15,
+    "carryScalePerDistanceUnit": 0.05,
+    "carryMaxBonus": 0.5,
+    "previewFractionBase": 0.6,
+    "previewFractionFocusBonus": 0.4
+  },
   "progression": {
     "levelCoeff": 0.06,
     "maxLevel": 30,

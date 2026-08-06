@@ -38,6 +38,7 @@ public static class BattleSim
         self.PiercedIds.Clear();
         self.PierceBudgetUsed = 0;
         self.ComboFiredThisTravel = false;
+        self.DistanceTravelledThisTravel = 0;
 
         world.Phase = Phase.Travelling;
         world.Events.Add(new SimEvent
@@ -134,7 +135,14 @@ public static class BattleSim
                 self.TravelTickCount += 1;
                 Collision.MaintainPierceMarks(world, self);
 
+                Vec2 posBeforeIntegrate = self.Pos;
                 bool stoppedByWeapon = Collision.IntegrateTravel(world, cfg, self, dt);
+
+                // Prompt 6 — Carry's distance tracking: net displacement this
+                // tick, summed tick over tick across the whole travel. Ticks are
+                // ~0.22 units of movement at MaxSpeed, so a same-tick wall bounce
+                // undercounting its true sub-step path length is negligible.
+                self.DistanceTravelledThisTravel += (self.Pos - posBeforeIntegrate).Length();
 
                 // Prompt 5 — teammate contact is checked independently of the
                 // opposing-team collision Collision.IntegrateTravel resolves

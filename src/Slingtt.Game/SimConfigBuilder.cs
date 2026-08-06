@@ -34,6 +34,12 @@ public static class SimConfigBuilder
             SweepDamageMult = balance.UltimateEscalation.SweepDamageMult,
             SweepMinBeatOffsetSeconds = balance.UltimateEscalation.SweepMinBeatOffsetSeconds,
             BenchRegenPctPerTurn = balance.Bench.RegenPctPerTurn,
+            SiphonRatio = balance.Archetype.SiphonRatio,
+            SiphonCapPctMaxHp = balance.Archetype.SiphonCapPctMaxHp,
+            CarryScalePerDistanceUnit = balance.Archetype.CarryScalePerDistanceUnit,
+            CarryMaxBonus = balance.Archetype.CarryMaxBonus,
+            PreviewFractionBase = balance.Archetype.PreviewFractionBase,
+            PreviewFractionFocusBonus = balance.Archetype.PreviewFractionFocusBonus,
         };
     }
 }

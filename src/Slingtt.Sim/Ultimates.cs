@@ -43,9 +43,20 @@ public static class Ultimates
         double dirLen = self.LastTravelDir.Length();
         Vec2 baseDir = self.LastTravelDir * (1.0 / (dirLen == 0 ? 1 : dirLen));
 
-        ShapeDef shape = scaleMultiplier == 1.0
+        // Prompt 6 — Carry (Light archetype): the wielder's own last-recorded
+        // travel distance adds further scale, on top of whatever scaleMultiplier
+        // the caller already applied (rarity's own scale is baked into
+        // spec.Shape well before this point). Whatever fired this ultimate —
+        // the wielder's own turn, a swap arrival, a Prompt 5 contact-combo
+        // proc — reads whatever DistanceTravelledThisTravel currently holds.
+        double carryBonus = self.Armor?.Archetype == ArmorArchetype.Light
+            ? Math.Min(cfg.CarryMaxBonus, self.DistanceTravelledThisTravel * cfg.CarryScalePerDistanceUnit)
+            : 0;
+        double totalScale = scaleMultiplier * (1 + carryBonus);
+
+        ShapeDef shape = totalScale == 1.0
             ? spec.Shape
-            : spec.Shape with { Width = spec.Shape.Width * scaleMultiplier, Radius = spec.Shape.Radius * scaleMultiplier };
+            : spec.Shape with { Width = spec.Shape.Width * totalScale, Radius = spec.Shape.Radius * totalScale };
 
         var timeline = new ResolutionTimeline();
         world.Events.Add(new SimEvent

@@ -62,6 +62,7 @@ public static class TurnOrder
 
             RegenBenchedHeroes(world, cfg);
             DecayComboIfNoContact(world);
+            ResetSiphonCaps(world);
 
             if (actor.StunnedTurns > 0)
             {
@@ -126,5 +127,20 @@ public static class TurnOrder
             world.ComboStacks = Math.Max(0, world.ComboStacks - 1);
         }
         world.ComboContactThisTurn = false;
+    }
+
+    /// <summary>Prompt 6 — Siphon's "per-turn capped" window is one turn-grant
+    /// to the next (same cadence as everything else here), not tied to any one
+    /// actor's own launch: a Heavy hero whose ultimate fires via a Prompt 5
+    /// contact-combo proc, mid another hero's turn, shares this same cap.</summary>
+    private static void ResetSiphonCaps(World world)
+    {
+        foreach (Actor a in world.Actors)
+        {
+            if (a.Team == Team.Hero)
+            {
+                a.SiphonHealedThisTurn = 0;
+            }
+        }
     }
 }

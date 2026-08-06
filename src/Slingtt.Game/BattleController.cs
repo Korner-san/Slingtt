@@ -374,7 +374,8 @@ public sealed class BattleController
         double drawRatio = Math.Min(dist / _maxDrag, 1);
         bool legal = drawRatio >= _cfg.MinDrawRatio;
         Prediction? prediction = legal
-            ? Predict.Trajectory(World, _cfg, new LaunchInput { DirX = dx, DirY = dy, DrawRatio = drawRatio })
+            ? Predict.Trajectory(World, _cfg, new LaunchInput { DirX = dx, DirY = dy, DrawRatio = drawRatio },
+                maxTicks: PreviewMaxTicks(self))
             : null;
         return new AimState
         {
@@ -385,5 +386,18 @@ public sealed class BattleController
             Legal = legal,
             Prediction = prediction,
         };
+    }
+
+    /// <summary>Prompt 6 — Focus (Balanced archetype): the aim preview normally
+    /// only runs out to a fraction of the hero's own move-duration budget, not
+    /// the full predicted travel — Focus extends that fraction. Purely a UI
+    /// truncation: Predict.Trajectory always runs the real sim, so this never
+    /// changes what the eventual shot actually does, only how much of it the
+    /// player gets to see in advance.</summary>
+    private int PreviewMaxTicks(Actor self)
+    {
+        double fraction = _cfg.PreviewFractionBase
+            + (self.Armor?.Archetype == ArmorArchetype.Balanced ? _cfg.PreviewFractionFocusBonus : 0);
+        return Math.Max(1, (int)(self.MoveDurationTicks * fraction));
     }
 }

@@ -48,6 +48,9 @@ public sealed class ArmorDef
     public double MoveDuration { get; set; }
     public string UltimateId { get; set; } = "";
     public string ModelId { get; set; } = "";
+    // Heavy | Balanced | Light — see Balance.Archetype. Also the trait
+    // selector: Heavy=Siphon, Balanced=Focus, Light=Carry (Prompt 6).
+    public string Archetype { get; set; } = "Balanced";
 }
 
 public sealed class EnemyDef
@@ -201,6 +204,26 @@ public sealed class BenchBalance
     public double RegenPctPerTurn { get; set; } = 0.05;
 }
 
+// Prompt 6 — Heavy/Balanced/Light armor archetypes. MoveDurationRarityStepPct
+// is the "rarity-driven stat budget split" itself: HP already scales with
+// rarity via ItemRarity.StatMultiplier (unchanged since Prompt 2), and this
+// makes moveDuration rarity-driven too, in whichever direction the archetype
+// already leans — Heavy gets shorter at higher rarity (more extreme tank),
+// Light gets longer (more extreme mobility, and more room for Carry to
+// scale off), Balanced is untouched by rarity either way. The rest of the
+// fields are the three traits' own numbers (Siphon/Carry read by the sim,
+// PreviewFraction read by the Game-layer BattleController for Focus).
+public sealed class ArchetypeBalance
+{
+    public double MoveDurationRarityStepPct { get; set; } = 0.05;
+    public double SiphonRatio { get; set; } = 0.25;
+    public double SiphonCapPctMaxHp { get; set; } = 0.15;
+    public double CarryScalePerDistanceUnit { get; set; } = 0.05;
+    public double CarryMaxBonus { get; set; } = 0.5;
+    public double PreviewFractionBase { get; set; } = 0.6;
+    public double PreviewFractionFocusBonus { get; set; } = 0.4;
+}
+
 public sealed class ProgressionBalance
 {
     public double LevelCoeff { get; set; } = 0.06;
@@ -264,6 +287,7 @@ public sealed class Balance
     public ItemRarityBalance ItemRarity { get; set; } = new();
     public UltimateEscalationBalance UltimateEscalation { get; set; } = new();
     public BenchBalance Bench { get; set; } = new();
+    public ArchetypeBalance Archetype { get; set; } = new();
     public ProgressionBalance Progression { get; set; } = new();
     public GachaBalance Gacha { get; set; } = new();
     public RewardsBalance Rewards { get; set; } = new();

@@ -90,6 +90,23 @@ public static class Damage
             FireArmorUltimate(world, target);
         }
 
+        // Prompt 6 — Siphon (Heavy archetype): lifesteal from ultimate damage
+        // only, off the net amount actually taken from the target's HP (a
+        // shield-absorbed hit heals nothing), capped per turn-window so a
+        // multi-wave ultimate (sweep, dual activation) can't stack unbounded
+        // healing.
+        if (kind == HitKind.Ultimate && source.Armor?.Archetype == ArmorArchetype.Heavy)
+        {
+            double capRemaining = Math.Max(0, source.MaxHp * cfg.SiphonCapPctMaxHp - source.SiphonHealedThisTurn);
+            double heal = Math.Min(dealt * cfg.SiphonRatio, capRemaining);
+            if (heal > 0)
+            {
+                source.SiphonHealedThisTurn += heal;
+                source.Hp = Math.Min(source.MaxHp, source.Hp + heal);
+                world.Events.Add(new SimEvent { Kind = SimEventKind.Heal, ActorId = source.Id, Amount = heal, Pos = source.Pos });
+            }
+        }
+
         return dealt;
     }
 

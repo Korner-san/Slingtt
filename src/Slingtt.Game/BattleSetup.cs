@@ -37,6 +37,13 @@ public static class BattleSetup
         _ => WeaponType.Sword,
     };
 
+    public static ArmorArchetype ParseArchetype(string s) => s switch
+    {
+        "Heavy" => ArmorArchetype.Heavy,
+        "Light" => ArmorArchetype.Light,
+        _ => ArmorArchetype.Balanced,
+    };
+
     // Prompt 3 — shape structure (element count) and scale (width/radius) come
     // from the wielding item's RARITY index, not evolution tier. Both grow
     // together with rarity, per the arrays in UltimateEscalationBalance.
@@ -211,7 +218,18 @@ public static class BattleSetup
         content.Ultimates.TryGetValue(weapon.UltimateId, out UltimateDef? weaponUltDef);
         content.Ultimates.TryGetValue(armor.UltimateId, out UltimateDef? armorUltDef);
         int tickRate = content.Balance.Sim.TickRate;
-        int moveTicks = SimMath.RoundJsInt(armor.MoveDuration * tickRate);
+
+        // Prompt 6 — Heavy/Balanced/Light as a rarity-driven stat budget split
+        // between HP and moveDuration. HP's rarity scaling is the existing line
+        // above (armorHpBase); this is moveDuration's own, archetype-directional
+        // version of the same idea — Heavy gets shorter at higher rarity (more
+        // extreme tank), Light gets longer (more extreme mobility, more room
+        // for Carry to scale off), Balanced is untouched by rarity either way.
+        ArmorArchetype archetype = ParseArchetype(armor.Archetype);
+        int archetypeSkew = archetype switch { ArmorArchetype.Heavy => -1, ArmorArchetype.Light => 1, _ => 0 };
+        int armorRarityIdx = Math.Max(0, rarity.Order.IndexOf(armor.Rarity));
+        double moveDurationRarityAdjust = 1 + archetypeSkew * armorRarityIdx * content.Balance.Archetype.MoveDurationRarityStepPct;
+        int moveTicks = SimMath.RoundJsInt(armor.MoveDuration * moveDurationRarityAdjust * tickRate);
 
         var weaponStats = new WeaponStats
         {
@@ -251,6 +269,7 @@ public static class BattleSetup
                 MoveDurationTicks = moveTicks,
                 Tier = aTier,
                 Ultimate = armorUltDef is null ? null : ArmorUltSpec(armorUltDef, aTier),
+                Archetype = archetype,
             },
             MoveDurationTicks = moveTicks,
             IsBenched = benched,
