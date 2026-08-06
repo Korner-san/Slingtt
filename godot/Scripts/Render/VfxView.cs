@@ -118,35 +118,26 @@ public sealed partial class VfxView : Node3D
     }
 
     /// <summary>The ultimate's shape, drawn once at full extent so the player can
-    /// read what the ability actually covered.</summary>
+    /// read what the ability actually covered. Geometry comes from the same
+    /// ShapeResolver.Directions the sim used to decide who got hit, rather than
+    /// a second hardcoded per-Kind switch here — one source of truth for what
+    /// the shape actually is (Prompt 1).</summary>
     public void OnWeaponUltimate(Vec2 pos, Vec2 dir, WeaponUltimateSpec spec)
     {
         Vector3 origin = ToWorld(pos, 0.5f);
         switch (spec.Kind)
         {
             case WeaponUltKind.Aftershock:
-                SpawnBurst(origin, Palette.VfxUltimate, (float)spec.Radius * 2f, 0.5f);
+                SpawnBurst(origin, Palette.VfxUltimate, (float)spec.Shape.Radius * 2f, 0.5f);
                 break;
             case WeaponUltKind.Cross:
-                SpawnBeam(origin, new Vector3(1, 0, 0), (float)spec.Width, 20f);
-                SpawnBeam(origin, new Vector3(0, 0, 1), (float)spec.Width, 20f);
-                if (spec.DoubleCross)
-                {
-                    SpawnBeam(origin, new Vector3(1, 0, 1).Normalized(), (float)spec.Width, 20f);
-                    SpawnBeam(origin, new Vector3(1, 0, -1).Normalized(), (float)spec.Width, 20f);
-                }
-                break;
             case WeaponUltKind.Beam:
             {
-                var d = new Vector3((float)dir.X, 0, (float)dir.Y);
-                if (d.LengthSquared() < 0.0001f)
+                Vec2 baseDir = dir.LengthSquared() < 0.0001 ? new Vec2(0, 1) : dir;
+                float length = spec.Kind == WeaponUltKind.Beam ? 24f : 20f;
+                foreach ((double ux, double uy) in ShapeResolver.Directions(spec.Shape, baseDir))
                 {
-                    d = Vector3.Forward;
-                }
-                SpawnBeam(origin, d.Normalized(), (float)spec.Width, 24f);
-                if (spec.SecondaryBeam)
-                {
-                    SpawnBeam(origin, new Vector3(-d.Z, 0, d.X).Normalized(), (float)spec.Width, 24f);
+                    SpawnBeam(origin, new Vector3((float)ux, 0, (float)uy), (float)spec.Shape.Width, length);
                 }
                 break;
             }

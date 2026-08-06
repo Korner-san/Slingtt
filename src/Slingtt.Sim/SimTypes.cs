@@ -56,16 +56,16 @@ public enum EndReason
     TurnLimit,
 }
 
-/// <summary>Discriminated-union stand-in for the TS WeaponUltimateSpec. Only the
-/// fields belonging to <see cref="Kind"/> are meaningful.</summary>
+/// <summary>Discriminated-union stand-in for the TS WeaponUltimateSpec. Geometry
+/// (arm count, line angles, width, radius) lives entirely in Shape as of Prompt 1
+/// — Kind is kept because it still selects non-geometric behaviour (Aftershock's
+/// stun) and because it's what content authoring keys off of; DmgMult/StunTurns
+/// are effect parameters, not shape.</summary>
 public readonly struct WeaponUltimateSpec
 {
     public WeaponUltKind Kind { get; init; }
-    public double Width { get; init; }
+    public ShapeDef Shape { get; init; }
     public double DmgMult { get; init; }
-    public bool DoubleCross { get; init; }
-    public bool SecondaryBeam { get; init; }
-    public double Radius { get; init; }
     public int StunTurns { get; init; }
 }
 
@@ -175,6 +175,9 @@ public struct SimEvent
     public EndReason Reason;
     public WeaponUltimateSpec? WeaponUlt;
     public ArmorUltimateSpec? ArmorUlt;
+
+    /// <summary>Set on WeaponUltimate events as of Prompt 1. Null elsewhere.</summary>
+    public ResolutionTimeline? Timeline;
 }
 
 public readonly struct ContactInfo

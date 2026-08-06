@@ -37,6 +37,34 @@ public static class BattleSetup
         _ => WeaponType.Sword,
     };
 
+    /// <summary>ShapeDefDto (JSON, degrees) -> ShapeDef (sim, radians). A missing
+    /// dto (an ultimate kind with no shape authored) yields default(ShapeDef) —
+    /// callers only reach that for armor kinds, which never look at Shape.</summary>
+    private static ShapeDef ToShapeDef(ShapeDefDto? dto, double defaultWidth = 1, double defaultRadius = 2)
+    {
+        if (dto is null)
+        {
+            return default;
+        }
+        ShapeType type = dto.Type switch
+        {
+            "lines" => ShapeType.Lines,
+            "rings" => ShapeType.Rings,
+            _ => ShapeType.RadialArms,
+        };
+        List<double>? lineAngles = dto.LineAngleDegrees?.ConvertAll(d => d * Math.PI / 180.0);
+        return new ShapeDef
+        {
+            Type = type,
+            ArmCount = dto.ArmCount ?? 2,
+            LineAngles = lineAngles,
+            Width = dto.Width ?? defaultWidth,
+            RotationOffset = (dto.RotationOffsetDegrees ?? 0) * Math.PI / 180.0,
+            Radius = dto.Radius ?? defaultRadius,
+            ExcludeAlreadyHit = dto.ExcludeAlreadyHit ?? false,
+        };
+    }
+
     private static WeaponUltimateSpec? WeaponUltSpec(UltimateDef def, int tier)
     {
         if (tier < 1 || def.Tiers.Count == 0)
@@ -50,21 +78,19 @@ public static class BattleSetup
             "cross" => new WeaponUltimateSpec
             {
                 Kind = WeaponUltKind.Cross,
-                Width = t.Width ?? 1,
+                Shape = ToShapeDef(t.Shape, defaultWidth: 1),
                 DmgMult = t.DmgMult ?? 1,
-                DoubleCross = t.DoubleCross ?? false,
             },
             "beam" => new WeaponUltimateSpec
             {
                 Kind = WeaponUltKind.Beam,
-                Width = t.Width ?? 1,
+                Shape = ToShapeDef(t.Shape, defaultWidth: 1),
                 DmgMult = t.DmgMult ?? 1,
-                SecondaryBeam = t.SecondaryBeam ?? false,
             },
             "aftershock" => new WeaponUltimateSpec
             {
                 Kind = WeaponUltKind.Aftershock,
-                Radius = t.Radius ?? 2,
+                Shape = ToShapeDef(t.Shape, defaultRadius: 2),
                 DmgMult = t.DmgMult ?? 1,
                 StunTurns = t.StunTurns ?? 0,
             },

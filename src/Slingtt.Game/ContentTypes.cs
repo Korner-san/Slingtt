@@ -76,15 +76,28 @@ public sealed class FloorDef
     public List<FloorEnemyEntry> Enemies { get; set; } = new();
 }
 
+/// <summary>Deserialization target for a ShapeDef, one level up from the sim
+/// type — Prompt 1 moves geometry out of hardcoded C# into this JSON shape.
+/// Angles are authored in degrees for readability and converted to radians in
+/// BattleSetup. RotationOffsetDegrees and ExcludeAlreadyHit are plumbed for
+/// later prompts; no current content sets them.</summary>
+public sealed class ShapeDefDto
+{
+    public string Type { get; set; } = ""; // radial_arms | lines | rings
+    public int? ArmCount { get; set; }
+    public List<double>? LineAngleDegrees { get; set; }
+    public double? Width { get; set; }
+    public double? RotationOffsetDegrees { get; set; }
+    public double? Radius { get; set; }
+    public bool? ExcludeAlreadyHit { get; set; }
+}
+
 /// <summary>One tier row. The JSON carries only the keys relevant to the parent
 /// ultimate's kind, so every field is optional here.</summary>
 public sealed class UltimateTierDef
 {
-    public double? Width { get; set; }
     public double? DmgMult { get; set; }
-    public bool? DoubleCross { get; set; }
-    public bool? SecondaryBeam { get; set; }
-    public double? Radius { get; set; }
+    public ShapeDefDto? Shape { get; set; } // weapon-ultimate kinds only
     public int? StunTurns { get; set; }
     public double? ShieldRatio { get; set; }
     public int? Rounds { get; set; }

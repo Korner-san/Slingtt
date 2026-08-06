@@ -4,9 +4,9 @@
     "nameKey": "ult_crossing_slash.name",
     "kind": "cross",
     "tiers": [
-      { "width": 0.8, "dmgMult": 1.2, "doubleCross": false },
-      { "width": 1.0, "dmgMult": 1.6, "doubleCross": false },
-      { "width": 1.2, "dmgMult": 2.0, "doubleCross": true }
+      { "dmgMult": 1.2, "shape": { "type": "radial_arms", "armCount": 2, "width": 0.8 } },
+      { "dmgMult": 1.6, "shape": { "type": "radial_arms", "armCount": 2, "width": 1.0 } },
+      { "dmgMult": 2.0, "shape": { "type": "radial_arms", "armCount": 4, "width": 1.2 } }
     ]
   },
   {
@@ -14,9 +14,9 @@
     "nameKey": "ult_piercing_ray.name",
     "kind": "beam",
     "tiers": [
-      { "width": 0.7, "dmgMult": 1.1, "secondaryBeam": false },
-      { "width": 0.9, "dmgMult": 1.5, "secondaryBeam": false },
-      { "width": 1.0, "dmgMult": 1.9, "secondaryBeam": true }
+      { "dmgMult": 1.1, "shape": { "type": "lines", "lineAngleDegrees": [0], "width": 0.7 } },
+      { "dmgMult": 1.5, "shape": { "type": "lines", "lineAngleDegrees": [0], "width": 0.9 } },
+      { "dmgMult": 1.9, "shape": { "type": "lines", "lineAngleDegrees": [0, 90], "width": 1.0 } }
     ]
   },
   {
@@ -24,9 +24,9 @@
     "nameKey": "ult_aftershock.name",
     "kind": "aftershock",
     "tiers": [
-      { "radius": 2.0, "dmgMult": 1.2, "stunTurns": 0 },
-      { "radius": 2.5, "dmgMult": 1.6, "stunTurns": 0 },
-      { "radius": 3.0, "dmgMult": 2.0, "stunTurns": 1 }
+      { "dmgMult": 1.2, "stunTurns": 0, "shape": { "type": "rings", "radius": 2.0 } },
+      { "dmgMult": 1.6, "stunTurns": 0, "shape": { "type": "rings", "radius": 2.5 } },
+      { "dmgMult": 2.0, "stunTurns": 1, "shape": { "type": "rings", "radius": 3.0 } }
     ]
   },
   {
