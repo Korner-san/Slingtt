@@ -28,10 +28,15 @@ public static class Palette
     public static readonly Color TeamEnemyDark = Hex(0xB62F47);
 
     // Rarity hues — load-bearing: the same hue appears on card, model emissive,
-    // pull animation, and results flash.
-    public static readonly Color RarityR = Hex(0x8A94B0);
-    public static readonly Color RaritySR = Hex(0xB46BFF);
-    public static readonly Color RaritySSR = Hex(0xFFC24D);
+    // pull animation, and results flash. Five tiers as of Prompt 2 (was
+    // R/SR/SSR); Common and Legendary keep the old R/SSR hues as anchors so
+    // existing remapped items don't visually jump, Uncommon/Rare/Epic fill in
+    // the classic gray-green-blue-purple-gold gacha/MMO rarity ramp.
+    public static readonly Color RarityCommon = Hex(0x8A94B0);
+    public static readonly Color RarityUncommon = Hex(0x5CDB7A);
+    public static readonly Color RarityRare = Hex(0x5CA8FF);
+    public static readonly Color RarityEpic = Hex(0xB46BFF);
+    public static readonly Color RarityLegendary = Hex(0xFFC24D);
 
     // Weapon-type accent, used on the held prop and the actor's trim.
     public static readonly Color WeaponSword = Hex(0xE6ECFF);
@@ -65,10 +70,11 @@ public static class Palette
 
     public static Color Rarity(string? rarity) => rarity switch
     {
-        "SSR" => RaritySSR,
-        "SR" => RaritySR,
-        "R" => RarityR,
-        _ => RarityR,
+        "Legendary" => RarityLegendary,
+        "Epic" => RarityEpic,
+        "Rare" => RarityRare,
+        "Uncommon" => RarityUncommon,
+        _ => RarityCommon,
     };
 
     public static Color Weapon(Slingtt.Sim.WeaponType type) => type switch
@@ -81,8 +87,8 @@ public static class Palette
     public static Color Resource(Slingtt.Game.ResourceKind kind) => kind switch
     {
         Slingtt.Game.ResourceKind.SlingCores => TeamHero,
-        Slingtt.Game.ResourceKind.EvoOre => RaritySR,
-        Slingtt.Game.ResourceKind.EvolutionCores => RaritySSR,
+        Slingtt.Game.ResourceKind.EvoOre => RarityRare,
+        Slingtt.Game.ResourceKind.EvolutionCores => RarityLegendary,
         _ => Hex(0xFF9D4D),
     };
 

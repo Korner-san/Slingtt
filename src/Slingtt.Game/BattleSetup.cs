@@ -135,9 +135,18 @@ public static class BattleSetup
         int aTier = Formulas.EvolutionTier(slot.ArmorLevel);
         PassiveDef passive = hero.Passive;
 
-        double atk = Formulas.StatAtLevel(weapon.Atk, slot.WeaponLevel, levelCoeff);
-        double maxHp = hero.BaseHP + Formulas.StatAtLevel(armor.Hp, slot.ArmorLevel, levelCoeff);
-        double def = hero.BaseDEF + Formulas.StatAtLevel(armor.Def, slot.ArmorLevel, levelCoeff);
+        // Prompt 2 — rarity multiplies the base stat; level scaling (Formulas.
+        // StatAtLevel) then applies on top of that, not the other way around,
+        // so a Legendary item at level 1 already reads as strong before any
+        // leveling investment.
+        ItemRarityBalance rarity = content.Balance.ItemRarity;
+        double weaponBase = weapon.Atk * rarity.MultiplierFor(weapon.Rarity);
+        double armorHpBase = armor.Hp * rarity.MultiplierFor(armor.Rarity);
+        double armorDefBase = armor.Def * rarity.MultiplierFor(armor.Rarity);
+
+        double atk = Formulas.StatAtLevel(weaponBase, slot.WeaponLevel, levelCoeff);
+        double maxHp = hero.BaseHP + Formulas.StatAtLevel(armorHpBase, slot.ArmorLevel, levelCoeff);
+        double def = hero.BaseDEF + Formulas.StatAtLevel(armorDefBase, slot.ArmorLevel, levelCoeff);
         if (passive.Kind == "atkPct")
         {
             atk = SimMath.RoundJs(atk * (1 + passive.Value));

@@ -20,6 +20,16 @@
     "lance": { "pierceMult": 0.9 },
     "hammer": { "directMult": 0.6, "aoeCenterMult": 1.4, "aoeRimMult": 0.6 }
   },
+  "itemRarity": {
+    "order": ["Common", "Uncommon", "Rare", "Epic", "Legendary"],
+    "statMultiplier": {
+      "Common": 1.0,
+      "Uncommon": 1.15,
+      "Rare": 1.35,
+      "Epic": 1.65,
+      "Legendary": 2.1
+    }
+  },
   "progression": {
     "levelCoeff": 0.06,
     "maxLevel": 30,

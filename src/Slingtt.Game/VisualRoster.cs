@@ -14,7 +14,7 @@ public sealed class ActorVisual
     public string ModelId { get; init; } = "";
     public double Radius { get; init; } = 0.5;
     public int Tier { get; init; }
-    public string? Rarity { get; init; } // R | SR | SSR, null for enemies
+    public string? Rarity { get; init; } // Common | Uncommon | Rare | Epic | Legendary, null for enemies
     public WeaponType WeaponType { get; init; }
     public string WeaponModelId { get; init; } = "";
 }

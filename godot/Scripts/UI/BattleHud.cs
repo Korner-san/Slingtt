@@ -225,7 +225,7 @@ public sealed partial class BattleHud : CanvasLayer
             {
                 rv.AddChild(UiKit.MakeLabel(
                     $"First-clear bonus: +{UiKit.FormatNumber(result.BossFirstClearBonus)} Sling Cores",
-                    15, Palette.RaritySSR));
+                    15, Palette.RarityLegendary));
             }
             _overlayBody.AddChild(rewards);
         }

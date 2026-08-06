@@ -27,7 +27,8 @@ public sealed class WeaponDef
     public string Id { get; set; } = "";
     public string NameKey { get; set; } = "";
     public string Type { get; set; } = "sword";
-    public string Rarity { get; set; } = "R";
+    // Common | Uncommon | Rare | Epic | Legendary — see Balance.ItemRarity.
+    public string Rarity { get; set; } = "Common";
     public double Atk { get; set; }
     public string UltimateId { get; set; } = "";
     public string ModelId { get; set; } = "";
@@ -40,7 +41,8 @@ public sealed class ArmorDef
 {
     public string Id { get; set; } = "";
     public string NameKey { get; set; } = "";
-    public string Rarity { get; set; } = "R";
+    // Common | Uncommon | Rare | Epic | Legendary — see Balance.ItemRarity.
+    public string Rarity { get; set; } = "Common";
     public double Hp { get; set; }
     public double Def { get; set; }
     public double MoveDuration { get; set; }
@@ -160,6 +162,20 @@ public sealed class SimBalance
     public HammerBalance Hammer { get; set; } = new();
 }
 
+// arena_prompt-style Prompt 2 — five-rarity vocabulary replacing R/SR/SSR.
+// StatMultiplier is what actually differentiates rarities now: items of the
+// same weapon type/armor weight class share a similar base stat, and rarity
+// does the scaling (BattleSetup applies this before Formulas.StatAtLevel's
+// level scaling — the two compose multiplicatively, not vice versa).
+public sealed class ItemRarityBalance
+{
+    public List<string> Order { get; set; } = new() { "Common", "Uncommon", "Rare", "Epic", "Legendary" };
+    public Dictionary<string, double> StatMultiplier { get; set; } = new();
+
+    public double MultiplierFor(string rarity)
+        => StatMultiplier.TryGetValue(rarity, out double m) ? m : 1.0;
+}
+
 public sealed class ProgressionBalance
 {
     public double LevelCoeff { get; set; } = 0.06;
@@ -220,6 +236,7 @@ public sealed class Balance
 {
     public ArenaBalance Arena { get; set; } = new();
     public SimBalance Sim { get; set; } = new();
+    public ItemRarityBalance ItemRarity { get; set; } = new();
     public ProgressionBalance Progression { get; set; } = new();
     public GachaBalance Gacha { get; set; } = new();
     public RewardsBalance Rewards { get; set; } = new();

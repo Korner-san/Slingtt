@@ -1,42 +1,34 @@
 [
-  {
-    "id": "arm_traveler_garb",
-    "nameKey": "arm_traveler_garb.name",
-    "rarity": "R",
-    "hp": 600,
-    "def": 40,
-    "moveDuration": 3.0,
-    "ultimateId": "ult_swift",
-    "modelId": "mdl_arm_traveler_garb"
-  },
-  {
-    "id": "arm_squire_mail",
-    "nameKey": "arm_squire_mail.name",
-    "rarity": "R",
-    "hp": 900,
-    "def": 70,
-    "moveDuration": 2.2,
-    "ultimateId": "ult_bulwark",
-    "modelId": "mdl_arm_squire_mail"
-  },
-  {
-    "id": "arm_ironhide_plate",
-    "nameKey": "arm_ironhide_plate.name",
-    "rarity": "R",
-    "hp": 1300,
-    "def": 110,
-    "moveDuration": 1.4,
-    "ultimateId": "ult_bulwark",
-    "modelId": "mdl_arm_ironhide_plate"
-  },
-  {
-    "id": "arm_lifebloom_vest",
-    "nameKey": "arm_lifebloom_vest.name",
-    "rarity": "SR",
-    "hp": 1000,
-    "def": 80,
-    "moveDuration": 2.2,
-    "ultimateId": "ult_vital",
-    "modelId": "mdl_arm_lifebloom_vest"
-  }
+  { "id": "arm_traveler_garb", "nameKey": "arm_traveler_garb.name", "rarity": "Common", "hp": 500, "def": 35, "moveDuration": 3.0, "ultimateId": "ult_swift", "modelId": "mdl_arm_traveler_garb" },
+  { "id": "arm_padded_wrap", "nameKey": "arm_padded_wrap.name", "rarity": "Common", "hp": 500, "def": 35, "moveDuration": 3.0, "ultimateId": "ult_swift", "modelId": "mdl_arm_padded_wrap" },
+  { "id": "arm_ranger_cloak", "nameKey": "arm_ranger_cloak.name", "rarity": "Uncommon", "hp": 500, "def": 35, "moveDuration": 3.0, "ultimateId": "ult_swift", "modelId": "mdl_arm_ranger_cloak" },
+  { "id": "arm_scout_harness", "nameKey": "arm_scout_harness.name", "rarity": "Uncommon", "hp": 500, "def": 35, "moveDuration": 3.0, "ultimateId": "ult_swift", "modelId": "mdl_arm_scout_harness" },
+  { "id": "arm_windward_vest", "nameKey": "arm_windward_vest.name", "rarity": "Rare", "hp": 500, "def": 35, "moveDuration": 3.0, "ultimateId": "ult_swift", "modelId": "mdl_arm_windward_vest" },
+  { "id": "arm_duskrunner_garb", "nameKey": "arm_duskrunner_garb.name", "rarity": "Rare", "hp": 500, "def": 35, "moveDuration": 3.0, "ultimateId": "ult_swift", "modelId": "mdl_arm_duskrunner_garb" },
+  { "id": "arm_stormlight_raiment", "nameKey": "arm_stormlight_raiment.name", "rarity": "Epic", "hp": 500, "def": 35, "moveDuration": 3.0, "ultimateId": "ult_swift", "modelId": "mdl_arm_stormlight_raiment" },
+  { "id": "arm_phantom_silk", "nameKey": "arm_phantom_silk.name", "rarity": "Epic", "hp": 500, "def": 35, "moveDuration": 3.0, "ultimateId": "ult_swift", "modelId": "mdl_arm_phantom_silk" },
+  { "id": "arm_zephyrs_embrace", "nameKey": "arm_zephyrs_embrace.name", "rarity": "Legendary", "hp": 500, "def": 35, "moveDuration": 3.0, "ultimateId": "ult_swift", "modelId": "mdl_arm_zephyrs_embrace" },
+  { "id": "arm_starlit_mantle", "nameKey": "arm_starlit_mantle.name", "rarity": "Legendary", "hp": 500, "def": 35, "moveDuration": 3.0, "ultimateId": "ult_swift", "modelId": "mdl_arm_starlit_mantle" },
+
+  { "id": "arm_squire_mail", "nameKey": "arm_squire_mail.name", "rarity": "Common", "hp": 750, "def": 55, "moveDuration": 2.2, "ultimateId": "ult_bulwark", "modelId": "mdl_arm_squire_mail" },
+  { "id": "arm_rookie_coat", "nameKey": "arm_rookie_coat.name", "rarity": "Common", "hp": 750, "def": 55, "moveDuration": 2.2, "ultimateId": "ult_vital", "modelId": "mdl_arm_rookie_coat" },
+  { "id": "arm_warden_harness", "nameKey": "arm_warden_harness.name", "rarity": "Uncommon", "hp": 750, "def": 55, "moveDuration": 2.2, "ultimateId": "ult_vital", "modelId": "mdl_arm_warden_harness" },
+  { "id": "arm_ranger_mail", "nameKey": "arm_ranger_mail.name", "rarity": "Uncommon", "hp": 750, "def": 55, "moveDuration": 2.2, "ultimateId": "ult_vital", "modelId": "mdl_arm_ranger_mail" },
+  { "id": "arm_lifebloom_vest", "nameKey": "arm_lifebloom_vest.name", "rarity": "Rare", "hp": 750, "def": 55, "moveDuration": 2.2, "ultimateId": "ult_vital", "modelId": "mdl_arm_lifebloom_vest" },
+  { "id": "arm_frostguard_coat", "nameKey": "arm_frostguard_coat.name", "rarity": "Rare", "hp": 750, "def": 55, "moveDuration": 2.2, "ultimateId": "ult_vital", "modelId": "mdl_arm_frostguard_coat" },
+  { "id": "arm_solaris_vestment", "nameKey": "arm_solaris_vestment.name", "rarity": "Epic", "hp": 750, "def": 55, "moveDuration": 2.2, "ultimateId": "ult_vital", "modelId": "mdl_arm_solaris_vestment" },
+  { "id": "arm_voidwoven_mail", "nameKey": "arm_voidwoven_mail.name", "rarity": "Epic", "hp": 750, "def": 55, "moveDuration": 2.2, "ultimateId": "ult_vital", "modelId": "mdl_arm_voidwoven_mail" },
+  { "id": "arm_aegis_of_dawn", "nameKey": "arm_aegis_of_dawn.name", "rarity": "Legendary", "hp": 750, "def": 55, "moveDuration": 2.2, "ultimateId": "ult_vital", "modelId": "mdl_arm_aegis_of_dawn" },
+  { "id": "arm_emberheart_coat", "nameKey": "arm_emberheart_coat.name", "rarity": "Legendary", "hp": 750, "def": 55, "moveDuration": 2.2, "ultimateId": "ult_vital", "modelId": "mdl_arm_emberheart_coat" },
+
+  { "id": "arm_ironhide_plate", "nameKey": "arm_ironhide_plate.name", "rarity": "Common", "hp": 1050, "def": 85, "moveDuration": 1.4, "ultimateId": "ult_bulwark", "modelId": "mdl_arm_ironhide_plate" },
+  { "id": "arm_rookie_plate", "nameKey": "arm_rookie_plate.name", "rarity": "Common", "hp": 1050, "def": 85, "moveDuration": 1.4, "ultimateId": "ult_bulwark", "modelId": "mdl_arm_rookie_plate" },
+  { "id": "arm_warcrest_plate", "nameKey": "arm_warcrest_plate.name", "rarity": "Uncommon", "hp": 1050, "def": 85, "moveDuration": 1.4, "ultimateId": "ult_bulwark", "modelId": "mdl_arm_warcrest_plate" },
+  { "id": "arm_bastion_plate", "nameKey": "arm_bastion_plate.name", "rarity": "Uncommon", "hp": 1050, "def": 85, "moveDuration": 1.4, "ultimateId": "ult_bulwark", "modelId": "mdl_arm_bastion_plate" },
+  { "id": "arm_stormguard_bulwark", "nameKey": "arm_stormguard_bulwark.name", "rarity": "Rare", "hp": 1050, "def": 85, "moveDuration": 1.4, "ultimateId": "ult_bulwark", "modelId": "mdl_arm_stormguard_bulwark" },
+  { "id": "arm_ironroot_plate", "nameKey": "arm_ironroot_plate.name", "rarity": "Rare", "hp": 1050, "def": 85, "moveDuration": 1.4, "ultimateId": "ult_bulwark", "modelId": "mdl_arm_ironroot_plate" },
+  { "id": "arm_dreadnought_plate", "nameKey": "arm_dreadnought_plate.name", "rarity": "Epic", "hp": 1050, "def": 85, "moveDuration": 1.4, "ultimateId": "ult_bulwark", "modelId": "mdl_arm_dreadnought_plate" },
+  { "id": "arm_obsidian_bulwark", "nameKey": "arm_obsidian_bulwark.name", "rarity": "Epic", "hp": 1050, "def": 85, "moveDuration": 1.4, "ultimateId": "ult_bulwark", "modelId": "mdl_arm_obsidian_bulwark" },
+  { "id": "arm_titanheart_aegis", "nameKey": "arm_titanheart_aegis.name", "rarity": "Legendary", "hp": 1050, "def": 85, "moveDuration": 1.4, "ultimateId": "ult_bulwark", "modelId": "mdl_arm_titanheart_aegis" },
+  { "id": "arm_wardens_bulwark", "nameKey": "arm_wardens_bulwark.name", "rarity": "Legendary", "hp": 1050, "def": 85, "moveDuration": 1.4, "ultimateId": "ult_bulwark", "modelId": "mdl_arm_wardens_bulwark" }
 ]

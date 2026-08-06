@@ -1,62 +1,28 @@
 [
-  {
-    "id": "wpn_squire_blade",
-    "nameKey": "wpn_squire_blade.name",
-    "type": "sword",
-    "rarity": "R",
-    "atk": 100,
-    "ultimateId": "ult_crossing_slash",
-    "modelId": "mdl_wpn_squire_blade",
-    "bounceDecay": 0.1
-  },
-  {
-    "id": "wpn_ash_lance",
-    "nameKey": "wpn_ash_lance.name",
-    "type": "lance",
-    "rarity": "R",
-    "atk": 105,
-    "ultimateId": "ult_piercing_ray",
-    "modelId": "mdl_wpn_ash_lance",
-    "pierceCount": 5
-  },
-  {
-    "id": "wpn_cobble_maul",
-    "nameKey": "wpn_cobble_maul.name",
-    "type": "hammer",
-    "rarity": "R",
-    "atk": 115,
-    "ultimateId": "ult_aftershock",
-    "modelId": "mdl_wpn_cobble_maul",
-    "aoeRadius": 1.8
-  },
-  {
-    "id": "wpn_dawnbreaker",
-    "nameKey": "wpn_dawnbreaker.name",
-    "type": "sword",
-    "rarity": "SR",
-    "atk": 135,
-    "ultimateId": "ult_crossing_slash",
-    "modelId": "mdl_wpn_dawnbreaker",
-    "bounceDecay": 0.08
-  },
-  {
-    "id": "wpn_stormpike",
-    "nameKey": "wpn_stormpike.name",
-    "type": "lance",
-    "rarity": "SR",
-    "atk": 140,
-    "ultimateId": "ult_piercing_ray",
-    "modelId": "mdl_wpn_stormpike",
-    "pierceCount": 6
-  },
-  {
-    "id": "wpn_sunforge_hammer",
-    "nameKey": "wpn_sunforge_hammer.name",
-    "type": "hammer",
-    "rarity": "SSR",
-    "atk": 175,
-    "ultimateId": "ult_aftershock",
-    "modelId": "mdl_wpn_sunforge_hammer",
-    "aoeRadius": 2.2
-  }
+  { "id": "wpn_squire_blade", "nameKey": "wpn_squire_blade.name", "type": "sword", "rarity": "Common", "atk": 100, "ultimateId": "ult_crossing_slash", "modelId": "mdl_wpn_squire_blade", "bounceDecay": 0.12 },
+  { "id": "wpn_trainee_edge", "nameKey": "wpn_trainee_edge.name", "type": "sword", "rarity": "Common", "atk": 100, "ultimateId": "ult_crossing_slash", "modelId": "mdl_wpn_trainee_edge", "bounceDecay": 0.12 },
+  { "id": "wpn_windcut_saber", "nameKey": "wpn_windcut_saber.name", "type": "sword", "rarity": "Uncommon", "atk": 100, "ultimateId": "ult_crossing_slash", "modelId": "mdl_wpn_windcut_saber", "bounceDecay": 0.10 },
+  { "id": "wpn_silverline_blade", "nameKey": "wpn_silverline_blade.name", "type": "sword", "rarity": "Uncommon", "atk": 100, "ultimateId": "ult_crossing_slash", "modelId": "mdl_wpn_silverline_blade", "bounceDecay": 0.10 },
+  { "id": "wpn_dawnbreaker", "nameKey": "wpn_dawnbreaker.name", "type": "sword", "rarity": "Rare", "atk": 100, "ultimateId": "ult_crossing_slash", "modelId": "mdl_wpn_dawnbreaker", "bounceDecay": 0.08 },
+  { "id": "wpn_duskfang", "nameKey": "wpn_duskfang.name", "type": "sword", "rarity": "Rare", "atk": 100, "ultimateId": "ult_crossing_slash", "modelId": "mdl_wpn_duskfang", "bounceDecay": 0.08 },
+  { "id": "wpn_starfall_edge", "nameKey": "wpn_starfall_edge.name", "type": "sword", "rarity": "Epic", "atk": 100, "ultimateId": "ult_crossing_slash", "modelId": "mdl_wpn_starfall_edge", "bounceDecay": 0.06 },
+  { "id": "wpn_aurelions_requiem", "nameKey": "wpn_aurelions_requiem.name", "type": "sword", "rarity": "Legendary", "atk": 100, "ultimateId": "ult_crossing_slash", "modelId": "mdl_wpn_aurelions_requiem", "bounceDecay": 0.04 },
+
+  { "id": "wpn_ash_lance", "nameKey": "wpn_ash_lance.name", "type": "lance", "rarity": "Common", "atk": 100, "ultimateId": "ult_piercing_ray", "modelId": "mdl_wpn_ash_lance", "pierceCount": 4 },
+  { "id": "wpn_barbed_pike", "nameKey": "wpn_barbed_pike.name", "type": "lance", "rarity": "Common", "atk": 100, "ultimateId": "ult_piercing_ray", "modelId": "mdl_wpn_barbed_pike", "pierceCount": 4 },
+  { "id": "wpn_stormtip_lance", "nameKey": "wpn_stormtip_lance.name", "type": "lance", "rarity": "Uncommon", "atk": 100, "ultimateId": "ult_piercing_ray", "modelId": "mdl_wpn_stormtip_lance", "pierceCount": 5 },
+  { "id": "wpn_glacier_spear", "nameKey": "wpn_glacier_spear.name", "type": "lance", "rarity": "Uncommon", "atk": 100, "ultimateId": "ult_piercing_ray", "modelId": "mdl_wpn_glacier_spear", "pierceCount": 5 },
+  { "id": "wpn_stormpike", "nameKey": "wpn_stormpike.name", "type": "lance", "rarity": "Rare", "atk": 100, "ultimateId": "ult_piercing_ray", "modelId": "mdl_wpn_stormpike", "pierceCount": 6 },
+  { "id": "wpn_thornreach", "nameKey": "wpn_thornreach.name", "type": "lance", "rarity": "Rare", "atk": 100, "ultimateId": "ult_piercing_ray", "modelId": "mdl_wpn_thornreach", "pierceCount": 6 },
+  { "id": "wpn_void_piercer", "nameKey": "wpn_void_piercer.name", "type": "lance", "rarity": "Epic", "atk": 100, "ultimateId": "ult_piercing_ray", "modelId": "mdl_wpn_void_piercer", "pierceCount": 7 },
+  { "id": "wpn_skyrend_lance", "nameKey": "wpn_skyrend_lance.name", "type": "lance", "rarity": "Legendary", "atk": 100, "ultimateId": "ult_piercing_ray", "modelId": "mdl_wpn_skyrend_lance", "pierceCount": 8 },
+
+  { "id": "wpn_cobble_maul", "nameKey": "wpn_cobble_maul.name", "type": "hammer", "rarity": "Common", "atk": 100, "ultimateId": "ult_aftershock", "modelId": "mdl_wpn_cobble_maul", "aoeRadius": 1.6 },
+  { "id": "wpn_rubble_fist", "nameKey": "wpn_rubble_fist.name", "type": "hammer", "rarity": "Common", "atk": 100, "ultimateId": "ult_aftershock", "modelId": "mdl_wpn_rubble_fist", "aoeRadius": 1.6 },
+  { "id": "wpn_ironcrush_hammer", "nameKey": "wpn_ironcrush_hammer.name", "type": "hammer", "rarity": "Uncommon", "atk": 100, "ultimateId": "ult_aftershock", "modelId": "mdl_wpn_ironcrush_hammer", "aoeRadius": 1.8 },
+  { "id": "wpn_quarrybreaker", "nameKey": "wpn_quarrybreaker.name", "type": "hammer", "rarity": "Uncommon", "atk": 100, "ultimateId": "ult_aftershock", "modelId": "mdl_wpn_quarrybreaker", "aoeRadius": 1.8 },
+  { "id": "wpn_stonewardens_mallet", "nameKey": "wpn_stonewardens_mallet.name", "type": "hammer", "rarity": "Rare", "atk": 100, "ultimateId": "ult_aftershock", "modelId": "mdl_wpn_stonewardens_mallet", "aoeRadius": 2.0 },
+  { "id": "wpn_boulderfall_maul", "nameKey": "wpn_boulderfall_maul.name", "type": "hammer", "rarity": "Rare", "atk": 100, "ultimateId": "ult_aftershock", "modelId": "mdl_wpn_boulderfall_maul", "aoeRadius": 2.0 },
+  { "id": "wpn_magma_sledge", "nameKey": "wpn_magma_sledge.name", "type": "hammer", "rarity": "Epic", "atk": 100, "ultimateId": "ult_aftershock", "modelId": "mdl_wpn_magma_sledge", "aoeRadius": 2.2 },
+  { "id": "wpn_sunforge_hammer", "nameKey": "wpn_sunforge_hammer.name", "type": "hammer", "rarity": "Legendary", "atk": 100, "ultimateId": "ult_aftershock", "modelId": "mdl_wpn_sunforge_hammer", "aoeRadius": 2.4 }
 ]

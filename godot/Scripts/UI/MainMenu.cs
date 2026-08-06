@@ -112,7 +112,7 @@ public sealed partial class MainMenu : Control
         panel.AddChild(row);
 
         row.AddChild(Stat("FLOOR", $"{game.Run.CurrentFloor} / {game.Run.MaxFloor}", Palette.UiText));
-        row.AddChild(Stat("BEST", game.Run.HighestFloorCleared.ToString(), Palette.RaritySSR));
+        row.AddChild(Stat("BEST", game.Run.HighestFloorCleared.ToString(), Palette.RarityLegendary));
 
         FloorDef? floor = game.Content.Floor(game.Run.CurrentFloor);
         int enemyCount = floor?.Enemies.Count ?? 0;
