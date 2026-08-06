@@ -1,0 +1,65 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Sling TT Evolution"
+config/description="Slingshot tower battler — mobile conversion of the Sling TT Evolution web game."
+config/version="1.0.0"
+config/features=PackedStringArray("4.7", "Mobile", "C#")
+config/icon="res://icon.svg"
+run/main_scene="res://scenes/MainMenu.tscn"
+
+[autoload]
+
+GameRoot="*res://Scripts/Autoload/GameRoot.cs"
+DevCapture="*res://Scripts/Autoload/DevCapture.cs"
+
+[dotnet]
+
+project/assembly_name="SlingttEvolutionMobile"
+
+[display]
+
+window/size/viewport_width=1080
+window/size/viewport_height=1920
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+; Godot 4 stores this as the ScreenOrientation enum index (1 = Portrait). The
+; inherited value was the Godot 3 string "portrait", which 4.x does not parse — it
+; silently fell back to 0 (Landscape), which is why the exported app opened
+; sideways at 2400x1080 while every layout here is authored for portrait.
+window/handheld/orientation=1
+window/energy_saving/keep_screen_on=true
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[physics]
+
+common/physics_ticks_per_second=60
+
+[rendering]
+
+; gl_compatibility (OpenGL ES 3.0) rather than the Vulkan "mobile" renderer.
+; This game is low-poly with two directional lights and no post-processing, so it
+; costs nothing visually, and GLES3 is the widest-support path on Android —
+; including devices whose Vulkan drivers are unreliable. The Vulkan swapchain is
+; exactly what failed here: the engine, C#, scenes and content all initialised
+; correctly on device and only vkQueuePresentKHR failed, leaving a black screen.
+; To try Vulkan on a specific phone, set both of these back to "mobile".
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=1
+; A branded clear colour rather than the engine default grey: if anything ever
+; fails to draw, the screen reads as the game's own background, not "broken".
+environment/defaults/default_clear_color=Color(0.078431, 0.070588, 0.101961, 1)

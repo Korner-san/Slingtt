@@ -1,0 +1,42 @@
+[
+  {
+    "id": "arm_traveler_garb",
+    "nameKey": "arm_traveler_garb.name",
+    "rarity": "R",
+    "hp": 600,
+    "def": 40,
+    "moveDuration": 3.0,
+    "ultimateId": "ult_swift",
+    "modelId": "mdl_arm_traveler_garb"
+  },
+  {
+    "id": "arm_squire_mail",
+    "nameKey": "arm_squire_mail.name",
+    "rarity": "R",
+    "hp": 900,
+    "def": 70,
+    "moveDuration": 2.2,
+    "ultimateId": "ult_bulwark",
+    "modelId": "mdl_arm_squire_mail"
+  },
+  {
+    "id": "arm_ironhide_plate",
+    "nameKey": "arm_ironhide_plate.name",
+    "rarity": "R",
+    "hp": 1300,
+    "def": 110,
+    "moveDuration": 1.4,
+    "ultimateId": "ult_bulwark",
+    "modelId": "mdl_arm_ironhide_plate"
+  },
+  {
+    "id": "arm_lifebloom_vest",
+    "nameKey": "arm_lifebloom_vest.name",
+    "rarity": "SR",
+    "hp": 1000,
+    "def": 80,
+    "moveDuration": 2.2,
+    "ultimateId": "ult_vital",
+    "modelId": "mdl_arm_lifebloom_vest"
+  }
+]

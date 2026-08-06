@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "scenario": {
+      "type": "http",
+      "url": "https://mcp.scenario.com/mcp"
+    }
+  }
+}

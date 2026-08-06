@@ -1,0 +1,50 @@
+[
+  {
+    "id": "hero_bram",
+    "nameKey": "hero_bram.name",
+    "baseHP": 300,
+    "baseDEF": 30,
+    "passive": { "kind": "hpPct", "value": 0.1 },
+    "modelId": "mdl_hero_bram"
+  },
+  {
+    "id": "hero_lyra",
+    "nameKey": "hero_lyra.name",
+    "baseHP": 220,
+    "baseDEF": 20,
+    "passive": { "kind": "atkPct", "value": 0.1 },
+    "modelId": "mdl_hero_lyra"
+  },
+  {
+    "id": "hero_tove",
+    "nameKey": "hero_tove.name",
+    "baseHP": 260,
+    "baseDEF": 40,
+    "passive": { "kind": "defPct", "value": 0.12 },
+    "modelId": "mdl_hero_tove"
+  },
+  {
+    "id": "hero_kess",
+    "nameKey": "hero_kess.name",
+    "baseHP": 200,
+    "baseDEF": 25,
+    "passive": { "kind": "atkPct", "value": 0.12 },
+    "modelId": "mdl_hero_kess"
+  },
+  {
+    "id": "hero_orin",
+    "nameKey": "hero_orin.name",
+    "baseHP": 340,
+    "baseDEF": 25,
+    "passive": { "kind": "hpPct", "value": 0.08 },
+    "modelId": "mdl_hero_orin"
+  },
+  {
+    "id": "hero_mira",
+    "nameKey": "hero_mira.name",
+    "baseHP": 240,
+    "baseDEF": 35,
+    "passive": { "kind": "defPct", "value": 0.1 },
+    "modelId": "mdl_hero_mira"
+  }
+]

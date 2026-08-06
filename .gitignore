@@ -1,0 +1,17 @@
+# Godot 4+ specific ignores
+godot/.godot/
+godot/android/
+
+# .NET build artifacts
+bin/
+obj/
+
+# Signing and secrets — never committed, per 02-technical/22-godot-project-structure.md §7
+*.keystore
+*.p12
+*.mobileprovision
+serviceAccount*.json
+.env
+.env.*
+!.env.example
+godot/export_presets.cfg

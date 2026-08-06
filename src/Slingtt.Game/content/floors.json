@@ -1,0 +1,21 @@
+[
+  { "floor": 1, "enemies": [{ "enemyId": "enm_gloom_imp" }, { "enemyId": "enm_gloom_imp" }] },
+  {
+    "floor": 2,
+    "enemies": [{ "enemyId": "enm_gloom_imp" }, { "enemyId": "enm_gloom_imp" }, { "enemyId": "enm_pike_husk" }]
+  },
+  {
+    "floor": 3,
+    "enemies": [{ "enemyId": "enm_gloom_imp" }, { "enemyId": "enm_pike_husk" }, { "enemyId": "enm_boulder_brute" }]
+  },
+  {
+    "floor": 4,
+    "enemies": [
+      { "enemyId": "enm_pike_husk" },
+      { "enemyId": "enm_pike_husk" },
+      { "enemyId": "enm_boulder_brute" },
+      { "enemyId": "enm_gloom_imp" }
+    ]
+  },
+  { "floor": 5, "enemies": [{ "enemyId": "enm_warden_of_five" }] }
+]

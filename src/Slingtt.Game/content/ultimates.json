@@ -1,0 +1,54 @@
+[
+  {
+    "id": "ult_crossing_slash",
+    "nameKey": "ult_crossing_slash.name",
+    "kind": "cross",
+    "tiers": [
+      { "width": 0.8, "dmgMult": 1.2, "doubleCross": false },
+      { "width": 1.0, "dmgMult": 1.6, "doubleCross": false },
+      { "width": 1.2, "dmgMult": 2.0, "doubleCross": true }
+    ]
+  },
+  {
+    "id": "ult_piercing_ray",
+    "nameKey": "ult_piercing_ray.name",
+    "kind": "beam",
+    "tiers": [
+      { "width": 0.7, "dmgMult": 1.1, "secondaryBeam": false },
+      { "width": 0.9, "dmgMult": 1.5, "secondaryBeam": false },
+      { "width": 1.0, "dmgMult": 1.9, "secondaryBeam": true }
+    ]
+  },
+  {
+    "id": "ult_aftershock",
+    "nameKey": "ult_aftershock.name",
+    "kind": "aftershock",
+    "tiers": [
+      { "radius": 2.0, "dmgMult": 1.2, "stunTurns": 0 },
+      { "radius": 2.5, "dmgMult": 1.6, "stunTurns": 0 },
+      { "radius": 3.0, "dmgMult": 2.0, "stunTurns": 1 }
+    ]
+  },
+  {
+    "id": "ult_bulwark",
+    "nameKey": "ult_bulwark.name",
+    "kind": "bulwark",
+    "tiers": [
+      { "shieldRatio": 0.2, "rounds": 2 },
+      { "shieldRatio": 0.3, "rounds": 2 },
+      { "shieldRatio": 0.45, "rounds": 3 }
+    ]
+  },
+  {
+    "id": "ult_swift",
+    "nameKey": "ult_swift.name",
+    "kind": "swift",
+    "tiers": [{ "moveMult": 1.3 }, { "moveMult": 1.45 }, { "moveMult": 1.6 }]
+  },
+  {
+    "id": "ult_vital",
+    "nameKey": "ult_vital.name",
+    "kind": "vital",
+    "tiers": [{ "healRatio": 0.2 }, { "healRatio": 0.3 }, { "healRatio": 0.45 }]
+  }
+]

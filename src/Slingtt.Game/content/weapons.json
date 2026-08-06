@@ -1,0 +1,62 @@
+[
+  {
+    "id": "wpn_squire_blade",
+    "nameKey": "wpn_squire_blade.name",
+    "type": "sword",
+    "rarity": "R",
+    "atk": 100,
+    "ultimateId": "ult_crossing_slash",
+    "modelId": "mdl_wpn_squire_blade",
+    "bounceDecay": 0.1
+  },
+  {
+    "id": "wpn_ash_lance",
+    "nameKey": "wpn_ash_lance.name",
+    "type": "lance",
+    "rarity": "R",
+    "atk": 105,
+    "ultimateId": "ult_piercing_ray",
+    "modelId": "mdl_wpn_ash_lance",
+    "pierceCount": 5
+  },
+  {
+    "id": "wpn_cobble_maul",
+    "nameKey": "wpn_cobble_maul.name",
+    "type": "hammer",
+    "rarity": "R",
+    "atk": 115,
+    "ultimateId": "ult_aftershock",
+    "modelId": "mdl_wpn_cobble_maul",
+    "aoeRadius": 1.8
+  },
+  {
+    "id": "wpn_dawnbreaker",
+    "nameKey": "wpn_dawnbreaker.name",
+    "type": "sword",
+    "rarity": "SR",
+    "atk": 135,
+    "ultimateId": "ult_crossing_slash",
+    "modelId": "mdl_wpn_dawnbreaker",
+    "bounceDecay": 0.08
+  },
+  {
+    "id": "wpn_stormpike",
+    "nameKey": "wpn_stormpike.name",
+    "type": "lance",
+    "rarity": "SR",
+    "atk": 140,
+    "ultimateId": "ult_piercing_ray",
+    "modelId": "mdl_wpn_stormpike",
+    "pierceCount": 6
+  },
+  {
+    "id": "wpn_sunforge_hammer",
+    "nameKey": "wpn_sunforge_hammer.name",
+    "type": "hammer",
+    "rarity": "SSR",
+    "atk": 175,
+    "ultimateId": "ult_aftershock",
+    "modelId": "mdl_wpn_sunforge_hammer",
+    "aoeRadius": 2.2
+  }
+]

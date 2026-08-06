@@ -1,0 +1,16 @@
+<Project Sdk="Godot.NET.Sdk/4.7.1">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Slingtt.Render</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\Slingtt.Sim\Slingtt.Sim.csproj" />
+    <ProjectReference Include="..\src\Slingtt.Game\Slingtt.Game.csproj" />
+  </ItemGroup>
+
+</Project>

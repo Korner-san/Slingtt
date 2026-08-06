@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Slingtt.Sim</RootNamespace>
+    <!-- No Godot reference, ever. This is the purity guarantee from
+         02-technical/20-architecture.md and 21-determinism-spec.md. -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Slingtt.Shared\Slingtt.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Slingtt.Game</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Slingtt.Shared\Slingtt.Shared.csproj" />
+    <ProjectReference Include="..\Slingtt.Sim\Slingtt.Sim.csproj" />
+  </ItemGroup>
+
+  <!-- Content ships INSIDE the assembly rather than as res:// files. A missing or
+       mis-cased data path is invisible on desktop and fatal on Android, and that
+       class of packaging bug is exactly what produced the original grey screen.
+       Embedded resources cannot be dropped by an export preset. -->
+  <ItemGroup>
+    <EmbeddedResource Include="content\*.json" />
+  </ItemGroup>
+
+</Project>

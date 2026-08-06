@@ -1,0 +1,57 @@
+{
+  "arena": { "w": 9, "h": 16 },
+  "sim": {
+    "tickRate": 120,
+    "maxSpeed": 26,
+    "friction": 0.32,
+    "minSpeed": 0.6,
+    "minDrawRatio": 0.25,
+    "maxDrag": 3.0,
+    "hardCapSeconds": 5,
+    "contactCooldownSeconds": 0.08,
+    "defK": 300,
+    "varianceMin": 0.95,
+    "varianceMax": 1.05,
+    "wallRestitution": 1.0,
+    "turnLimit": 30,
+    "evolutionDamagePerTier": 0.1,
+    "armorUltThreshold": 0.5,
+    "sword": { "floorMult": 0.4 },
+    "lance": { "pierceMult": 0.9 },
+    "hammer": { "directMult": 0.6, "aoeCenterMult": 1.4, "aoeRimMult": 0.6 }
+  },
+  "progression": {
+    "levelCoeff": 0.06,
+    "maxLevel": 30,
+    "enemyScalingCoeff": 0.11,
+    "bossEvery": 5,
+    "shopEvery": 20,
+    "checkpointEvery": 10
+  },
+  "gacha": {
+    "rates": { "SSR": 0.03, "SR": 0.12, "R": 0.85 },
+    "tenPullGuarantee": "SR",
+    "softPityStart": 60,
+    "hardPity": 80,
+    "singlePullCost": 100,
+    "tenPullCost": 900
+  },
+  "rewards": {
+    "floorClear": {
+      "slingCoresBase": 18,
+      "slingCoresPerFloor": 3,
+      "evoOreBase": 12,
+      "evoOrePerFloor": 3,
+      "sparksBase": 25,
+      "sparksPerFloor": 4,
+      "healPctMaxHp": 0.15
+    },
+    "boss": {
+      "evolutionCores": 1,
+      "firstClearSlingCores": 120
+    },
+    "milestones": {
+      "evoOreUpgradeThreshold": 60
+    }
+  }
+}

@@ -1,0 +1,110 @@
+; Checked-in, secret-free reference for export_presets.cfg (which is gitignored once
+; Android-Release carries a real keystore path/password — see that file's own header).
+; Copy this to export_presets.cfg locally and fill in keystore/release_* for your machine/CI.
+;
+; Android-Dev proves the unsigned export pipeline end to end (M0 spike).
+; Android-Release was pulled forward from its original M2 slot (2026-08-01 decision) to also
+; validate signed Gradle/AAB export during M0 — see 28-build-and-release.md §5 changelog note.
+; The iOS presets remain deferred to M2: they need macOS/Xcode.
+; See 02-technical/22-godot-project-structure.md §8 and 28-build-and-release.md §5.
+
+[preset.0]
+
+name="Android-Dev"
+platform="Android"
+runnable=true
+advanced_options=false
+dedicated_server=false
+custom_features=""
+export_filter="all_resources"
+include_filter=""
+exclude_filter=""
+export_path="../builds/android/slingtt-dev.apk"
+encryption_include_filters=""
+encryption_exclude_filters=""
+encrypt_pck=false
+encrypt_directory=false
+script_export_mode=2
+
+[preset.0.options]
+
+gradle_build/use_gradle_build=true
+gradle_build/export_format=0
+version/code=1
+version/name="0.1.0"
+package/unique_name="com.slingtt.evolutionmobile.dev"
+package/name="Slingtt Evolution (Dev)"
+package/signed=true
+package/app_category=2
+package/retain_data_on_uninstall=false
+launcher_icons/main_192x192=""
+launcher_icons/adaptive_foreground_432x432=""
+launcher_icons/adaptive_background_432x432=""
+graphics/opengl_debug=false
+xr_features/xr_mode=0
+screen/immersive_mode=true
+screen/support_small=true
+screen/support_normal=true
+screen/support_large=true
+screen/support_xlarge=true
+user_data_backup/allow=false
+command_line/extra_args=""
+apk_expansion/enable=false
+permissions/internet=true
+architectures/armeabi-v7a=false
+architectures/arm64-v8a=true
+architectures/x86=false
+architectures/x86_64=false
+
+[preset.1]
+
+name="Android-Release"
+platform="Android"
+runnable=false
+advanced_options=false
+dedicated_server=false
+custom_features=""
+export_filter="all_resources"
+include_filter=""
+exclude_filter=""
+export_path="../builds/android/slingtt-release.aab"
+encryption_include_filters=""
+encryption_exclude_filters=""
+encrypt_pck=false
+encrypt_directory=false
+script_export_mode=2
+
+[preset.1.options]
+
+gradle_build/use_gradle_build=true
+gradle_build/export_format=1
+gradle_build/min_sdk=""
+gradle_build/target_sdk=""
+version/code=1
+version/name="0.1.0"
+package/unique_name="com.slingtt.evolutionmobile"
+package/name="Slingtt Evolution"
+package/signed=true
+package/app_category=2
+package/retain_data_on_uninstall=false
+launcher_icons/main_192x192=""
+launcher_icons/adaptive_foreground_432x432=""
+launcher_icons/adaptive_background_432x432=""
+graphics/opengl_debug=false
+xr_features/xr_mode=0
+screen/immersive_mode=true
+screen/support_small=true
+screen/support_normal=true
+screen/support_large=true
+screen/support_xlarge=true
+user_data_backup/allow=false
+command_line/extra_args=""
+apk_expansion/enable=false
+permissions/internet=true
+architectures/armeabi-v7a=false
+architectures/arm64-v8a=true
+architectures/x86=false
+architectures/x86_64=false
+keystore/release="/absolute/path/to/your/release.keystore"
+keystore/release_user="your-key-alias"
+keystore/release_password="__SET_LOCALLY_NEVER_COMMIT__"

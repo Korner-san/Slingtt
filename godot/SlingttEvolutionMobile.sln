@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlingttEvolutionMobile", "SlingttEvolutionMobile.csproj", "{363EAA20-D013-4E20-B206-391B66D8605C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Slingtt.Sim", "..\src\Slingtt.Sim\Slingtt.Sim.csproj", "{FFF55FF3-3189-4272-9A77-C14BC300BEB9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Slingtt.Game", "..\src\Slingtt.Game\Slingtt.Game.csproj", "{98A53826-57F3-4215-884C-0253CD46FF66}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Slingtt.Shared", "..\src\Slingtt.Shared\Slingtt.Shared.csproj", "{9B3A2C24-1AF5-432D-A82D-B2DBA43D1E5C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{363EAA20-D013-4E20-B206-391B66D8605C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{363EAA20-D013-4E20-B206-391B66D8605C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{363EAA20-D013-4E20-B206-391B66D8605C}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{363EAA20-D013-4E20-B206-391B66D8605C}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{FFF55FF3-3189-4272-9A77-C14BC300BEB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFF55FF3-3189-4272-9A77-C14BC300BEB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFF55FF3-3189-4272-9A77-C14BC300BEB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFF55FF3-3189-4272-9A77-C14BC300BEB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98A53826-57F3-4215-884C-0253CD46FF66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98A53826-57F3-4215-884C-0253CD46FF66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98A53826-57F3-4215-884C-0253CD46FF66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98A53826-57F3-4215-884C-0253CD46FF66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B3A2C24-1AF5-432D-A82D-B2DBA43D1E5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B3A2C24-1AF5-432D-A82D-B2DBA43D1E5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B3A2C24-1AF5-432D-A82D-B2DBA43D1E5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B3A2C24-1AF5-432D-A82D-B2DBA43D1E5C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

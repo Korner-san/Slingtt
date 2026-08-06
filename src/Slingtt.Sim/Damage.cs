@@ -1,0 +1,140 @@
+namespace Slingtt.Sim;
+
+public static class Damage
+{
+    /// <summary>Kinds that bypass the contact cooldown: the cooldown exists to stop
+    /// an actor wedged against an enemy from draining it every tick, not to
+    /// suppress AOE/ultimate bursts.</summary>
+    private static bool CooldownExempt(HitKind kind)
+        => kind == HitKind.Aoe || kind == HitKind.Ultimate;
+
+    /// <summary>Full damage application: cooldown gate, formula, shield absorb,
+    /// death, armor ultimate trigger. Returns the damage dealt, or null if skipped
+    /// by the contact cooldown — callers use null to avoid counting a non-hit
+    /// toward bounce decay or the pierce budget.</summary>
+    public static double? Apply(
+        World world,
+        SimConfig cfg,
+        Actor source,
+        Actor target,
+        double hitMult,
+        HitKind kind,
+        Vec2 pos)
+    {
+        if (!world.DamageEnabled)
+        {
+            return 0; // aim-prediction clone: no damage, no rng draws
+        }
+        if (!target.IsAlive)
+        {
+            return null;
+        }
+
+        string key = source.Id + ":" + target.Id;
+        if (!CooldownExempt(kind))
+        {
+            if (world.ContactLog.TryGetValue(key, out int last)
+                && (world.Tick - last) / (double)cfg.TickRate < cfg.ContactCooldownSeconds)
+            {
+                return null;
+            }
+            world.ContactLog[key] = world.Tick;
+        }
+
+        WeaponStats w = source.Weapon;
+        double raw = w.Atk * hitMult * (1 + w.Tier * cfg.EvolutionDamagePerTier);
+        double mitigated = raw * (1 - target.Def / (target.Def + cfg.DefK));
+        double varied = mitigated * Rng.Range(ref world.Rng, cfg.VarianceMin, cfg.VarianceMax);
+        double final = Math.Max(1, SimMath.RoundJs(varied));
+
+        double absorbed = 0;
+        if (target.ShieldHp > 0 && world.Round <= target.ShieldExpiresRound)
+        {
+            absorbed = Math.Min(target.ShieldHp, final);
+            target.ShieldHp -= absorbed;
+        }
+        double dealt = final - absorbed;
+        target.Hp = Math.Max(0, target.Hp - dealt);
+
+        world.Events.Add(new SimEvent
+        {
+            Kind = SimEventKind.Hit,
+            ActorId = source.Id,
+            TargetId = target.Id,
+            Amount = dealt,
+            Pos = pos,
+            HitKind = kind,
+            Absorbed = absorbed,
+        });
+
+        // Ordering: damage -> death check -> armor ultimate only if survived.
+        // An actor killed outright does not get its armor ultimate.
+        if (target.Hp <= 0)
+        {
+            world.Events.Add(new SimEvent
+            {
+                Kind = SimEventKind.Death,
+                ActorId = target.Id,
+                Pos = target.Pos,
+            });
+        }
+        else if (!target.ArmorUltFired
+                 && target.Hp / target.MaxHp < cfg.ArmorUltThreshold
+                 && target.Armor?.Ultimate is not null)
+        {
+            FireArmorUltimate(world, target);
+        }
+
+        return dealt;
+    }
+
+    private static void FireArmorUltimate(World world, Actor actor)
+    {
+        if (actor.Armor?.Ultimate is not { } spec)
+        {
+            return;
+        }
+        actor.ArmorUltFired = true;
+        world.Events.Add(new SimEvent
+        {
+            Kind = SimEventKind.ArmorUltimate,
+            ActorId = actor.Id,
+            ArmorUlt = spec,
+            Pos = actor.Pos,
+        });
+
+        switch (spec.Kind)
+        {
+            case ArmorUltKind.Bulwark:
+            {
+                double amount = SimMath.RoundJs(actor.MaxHp * spec.ShieldRatio);
+                actor.ShieldHp += amount;
+                actor.ShieldExpiresRound = world.Round + spec.Rounds;
+                world.Events.Add(new SimEvent
+                {
+                    Kind = SimEventKind.Shield,
+                    ActorId = actor.Id,
+                    Amount = amount,
+                    Pos = actor.Pos,
+                });
+                break;
+            }
+            case ArmorUltKind.Swift:
+                actor.MoveMultNextTurn = spec.MoveMult;
+                break;
+            case ArmorUltKind.Vital:
+            {
+                double amount = SimMath.RoundJs(actor.MaxHp * spec.HealRatio);
+                actor.Hp = Math.Min(actor.MaxHp, actor.Hp + amount);
+                world.Events.Add(new SimEvent
+                {
+                    Kind = SimEventKind.Heal,
+                    ActorId = actor.Id,
+                    Amount = amount,
+                    Pos = actor.Pos,
+                });
+                break;
+            }
+        }
+    }
+}
