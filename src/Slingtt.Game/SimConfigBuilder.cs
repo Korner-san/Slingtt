@@ -40,7 +40,6 @@ public static class SimConfigBuilder
             CarryScalePerDistanceUnit = balance.Archetype.CarryScalePerDistanceUnit,
             CarryMaxBonus = balance.Archetype.CarryMaxBonus,
             PreviewFractionBase = balance.Archetype.PreviewFractionBase,
-            PreviewFractionFocusBonus = balance.Archetype.PreviewFractionFocusBonus,
             HazardDamageMult = balance.EnemySpecials.HazardDamageMult,
             HazardRadius = balance.EnemySpecials.HazardRadius,
             HazardDropIntervalTicks = balance.EnemySpecials.HazardDropIntervalTicks,

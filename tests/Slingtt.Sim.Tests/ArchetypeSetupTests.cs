@@ -5,7 +5,7 @@ using Xunit;
 namespace Slingtt.Sim.Tests;
 
 // Prompt 6's content -> BattleSetup wiring (the rarity-driven moveDuration
-// split) and BattleController's Focus aim-preview extension.
+// split) and BattleController's aim-preview fraction.
 public class ArchetypeSetupTests
 {
     private static ArmorArchetype ArchetypeOf(Content c, WorldSetup setup, string heroId)
@@ -107,15 +107,17 @@ public class ArchetypeSetupTests
     }
 
     [Fact]
-    public void Focus_ExtendsTheAimPreview_ComparedToANonFocusArchetype()
+    public void AimPreview_IsTheSameFlat60PercentFraction_RegardlessOfArchetype()
     {
-        int balanced = PreviewPointCount(ArmorArchetype.Balanced); // Focus
-        int heavy = PreviewPointCount(ArmorArchetype.Heavy); // no Focus
+        // Focus (Balanced) used to extend the preview to 100% — removed per a
+        // later live-iteration request: the preview should always show a flat
+        // 60% taste of the shot, not the full resolution, for every archetype.
+        int balanced = PreviewPointCount(ArmorArchetype.Balanced);
+        int heavy = PreviewPointCount(ArmorArchetype.Heavy);
 
-        // previewFractionBase=0.6 vs 1.0 of the same 240-tick budget, in an open
+        // previewFractionBase=0.6 of the same 240-tick budget, in an open
         // field where nothing else (walls, bounce cap) truncates it sooner.
-        Assert.True(balanced > heavy, $"expected Focus (Balanced) preview ({balanced}) to run longer than Heavy's ({heavy})");
+        Assert.Equal(balanced, heavy);
         Assert.InRange(heavy, 130, 155); // ~0.6 * 240 = 144
-        Assert.InRange(balanced, 230, 241); // ~1.0 * 240 = 240
     }
 }

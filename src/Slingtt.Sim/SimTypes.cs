@@ -66,10 +66,11 @@ public enum ArmorUltKind
 }
 
 /// <summary>Prompt 6 — the archetype IS the trait selector: Heavy grants
-/// Siphon (Damage.Apply), Balanced grants Focus (BattleController's aim
-/// preview, Game-layer only), Light grants Carry (Ultimates.FireWeaponUltimate).
-/// Balanced sorts first so an unset/default ArmorStats reads as the neutral
-/// archetype rather than accidentally granting a trait.</summary>
+/// Siphon (Damage.Apply), Light grants Carry (Ultimates.FireWeaponUltimate).
+/// Balanced has no trait of its own — a later live-iteration request removed
+/// its former Focus aim-preview bonus, so it's now the neutral middle choice
+/// by design, not just by default. Balanced still sorts first so an unset/
+/// default ArmorStats reads as that neutral archetype.</summary>
 public enum ArmorArchetype
 {
     Balanced,

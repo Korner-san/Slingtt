@@ -34,12 +34,6 @@ public sealed class AimState
     public double DrawRatio;
     public bool Legal;      // false below the cancel threshold
     public Prediction? Prediction; // sim-space points/bounces
-
-    /// <summary>Prompt 10 — the aiming hero's weapon ultimate shape, if they
-    /// have one unlocked, for the render layer's live footprint preview at
-    /// the predicted landing point. Null below evolution tier 1 (item level
-    /// under 10), same gate as the ultimate itself not existing yet.</summary>
-    public ShapeDef? UltimateShape;
 }
 
 // Framework-free owner of a running battle: no engine types here. The render
@@ -403,20 +397,16 @@ public sealed class BattleController
             DrawRatio = drawRatio,
             Legal = legal,
             Prediction = prediction,
-            UltimateShape = self.Weapon.Ultimate?.Shape,
         };
     }
 
-    /// <summary>Prompt 6 — Focus (Balanced archetype): the aim preview normally
-    /// only runs out to a fraction of the hero's own move-duration budget, not
-    /// the full predicted travel — Focus extends that fraction. Purely a UI
-    /// truncation: Predict.Trajectory always runs the real sim, so this never
-    /// changes what the eventual shot actually does, only how much of it the
-    /// player gets to see in advance.</summary>
+    /// <summary>The aim preview always runs out to a flat fraction of the
+    /// hero's own move-duration budget, never the full predicted travel,
+    /// regardless of archetype — previously Focus (Balanced) extended this to
+    /// 100%, but the preview is meant to show a taste of the shot, not its
+    /// full resolution. Purely a UI truncation: Predict.Trajectory always runs
+    /// the real sim, so this never changes what the eventual shot actually
+    /// does, only how much of it the player gets to see in advance.</summary>
     private int PreviewMaxTicks(Actor self)
-    {
-        double fraction = _cfg.PreviewFractionBase
-            + (self.Armor?.Archetype == ArmorArchetype.Balanced ? _cfg.PreviewFractionFocusBonus : 0);
-        return Math.Max(1, (int)(self.MoveDurationTicks * fraction));
-    }
+        => Math.Max(1, (int)(self.MoveDurationTicks * _cfg.PreviewFractionBase));
 }

@@ -50,8 +50,7 @@
     "siphonCapPctMaxHp": 0.15,
     "carryScalePerDistanceUnit": 0.05,
     "carryMaxBonus": 0.5,
-    "previewFractionBase": 0.6,
-    "previewFractionFocusBonus": 0.4
+    "previewFractionBase": 0.6
   },
   "enemySpecials": {
     "hazardDamageMult": 0.5,

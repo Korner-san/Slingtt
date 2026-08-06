@@ -49,7 +49,8 @@ public sealed class ArmorDef
     public string UltimateId { get; set; } = "";
     public string ModelId { get; set; } = "";
     // Heavy | Balanced | Light — see Balance.Archetype. Also the trait
-    // selector: Heavy=Siphon, Balanced=Focus, Light=Carry (Prompt 6).
+    // selector: Heavy=Siphon, Light=Carry (Prompt 6); Balanced has no active
+    // trait of its own (its former Focus aim-preview bonus was removed).
     public string Archetype { get; set; } = "Balanced";
 }
 
@@ -230,8 +231,9 @@ public sealed class BenchBalance
 // already leans — Heavy gets shorter at higher rarity (more extreme tank),
 // Light gets longer (more extreme mobility, and more room for Carry to
 // scale off), Balanced is untouched by rarity either way. The rest of the
-// fields are the three traits' own numbers (Siphon/Carry read by the sim,
-// PreviewFraction read by the Game-layer BattleController for Focus).
+// fields are Heavy/Light's own trait numbers (Siphon/Carry, read by the
+// sim), plus PreviewFractionBase — the aim preview's flat length fraction,
+// read by the Game-layer BattleController, same for every archetype.
 public sealed class ArchetypeBalance
 {
     public double MoveDurationRarityStepPct { get; set; } = 0.05;
@@ -240,7 +242,6 @@ public sealed class ArchetypeBalance
     public double CarryScalePerDistanceUnit { get; set; } = 0.05;
     public double CarryMaxBonus { get; set; } = 0.5;
     public double PreviewFractionBase { get; set; } = 0.6;
-    public double PreviewFractionFocusBonus { get; set; } = 0.4;
 }
 
 // Prompt 7 — enemy specials (floors 6-15): trail hazards, and how long a

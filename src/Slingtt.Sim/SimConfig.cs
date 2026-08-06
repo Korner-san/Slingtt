@@ -48,15 +48,14 @@ public sealed class SimConfig
     public double BenchRegenPctPerTurn { get; init; } = 0.05;
 
     // Prompt 6 — archetype trait balance. Siphon/Carry are read by the sim
-    // (Damage.Apply / Ultimates.FireWeaponUltimate); the PreviewFraction pair
-    // lives here too even though only the Game-layer BattleController reads
-    // it, since SimConfig is the one bag of balance numbers Content maps onto.
+    // (Damage.Apply / Ultimates.FireWeaponUltimate); PreviewFractionBase lives
+    // here too even though only the Game-layer BattleController reads it,
+    // since SimConfig is the one bag of balance numbers Content maps onto.
     public double SiphonRatio { get; init; } = 0.25;
     public double SiphonCapPctMaxHp { get; init; } = 0.15;
     public double CarryScalePerDistanceUnit { get; init; } = 0.05;
     public double CarryMaxBonus { get; init; } = 0.5;
     public double PreviewFractionBase { get; init; } = 0.6;
-    public double PreviewFractionFocusBonus { get; init; } = 0.4;
 
     // Prompt 7 — enemy specials. HazardDamageMult is against the trail-layer's
     // own Atk, mirroring how every other damage source here is Atk-relative.
