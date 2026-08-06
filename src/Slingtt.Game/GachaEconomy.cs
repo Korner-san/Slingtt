@@ -64,8 +64,20 @@ public sealed class PullResult
 {
     public bool Success { get; init; }
     public string? FailureReason { get; init; }
+
+    /// <summary>What was drawn, for display — always populated on success even
+    /// for a duplicate, which is shown then immediately converted rather than
+    /// kept. See DuplicateEssenceGranted for what it became.</summary>
     public OwnedItem? Item { get; init; }
+
     public bool WasDuplicate { get; init; }
+
+    /// <summary>Prompt 9 — "duplicates showing what they became": a duplicate
+    /// never enters inventory at all, it's auto-sacrificed for its base
+    /// rarity value (same tab, no invested essence to refund since it's
+    /// brand new) the instant it's drawn. Zero when WasDuplicate is false.</summary>
+    public int DuplicateEssenceGranted { get; init; }
+
     public bool PityTriggered { get; init; }
     public bool TrickleTriggered { get; init; }
 }
@@ -141,7 +153,22 @@ public static class GachaEconomy
             Rarity = rarity,
             Level = 1,
         };
-        state.Items.Add(owned);
+
+        // Prompt 9 — a duplicate never enters inventory: it's shown (Item is
+        // still populated, for the reveal UI) but immediately converted to
+        // this tab's essence at its base rarity value instead of being kept.
+        // A brand-new pull has no invested essence to refund, so this is
+        // just the same base value Sacrifice would grant.
+        int duplicateEssence = 0;
+        if (wasDuplicate)
+        {
+            duplicateEssence = balance.EssenceValueByRarityIndex[Math.Clamp(RarityIndexOf(rarity), 0, balance.EssenceValueByRarityIndex.Count - 1)];
+            GrantEssence(save, tab, duplicateEssence);
+        }
+        else
+        {
+            state.Items.Add(owned);
+        }
 
         bool trickle = false;
         if (tier == GachaTier.Tier1)
@@ -161,6 +188,7 @@ public static class GachaEconomy
             Success = true,
             Item = owned,
             WasDuplicate = wasDuplicate,
+            DuplicateEssenceGranted = duplicateEssence,
             PityTriggered = pity,
             TrickleTriggered = trickle,
         };

@@ -38,6 +38,7 @@ public sealed partial class GameRoot : Node
     public RunState Run { get; private set; } = null!;
     public SimConfig SimConfig { get; private set; } = null!;
     public Sfx Sfx { get; private set; } = null!;
+    public IAdProvider AdProvider { get; private set; } = null!;
 
     /// <summary>Set when content fails to load. The menu surfaces this instead of
     /// showing an empty screen — a visible error beats a grey rectangle.</summary>
@@ -45,6 +46,7 @@ public sealed partial class GameRoot : Node
 
     public const string MenuScene = "res://scenes/MainMenu.tscn";
     public const string BattleScene = "res://scenes/Battle.tscn";
+    public const string ItemsScene = "res://scenes/ItemsScreen.tscn";
 
     public override void _Ready()
     {
@@ -53,6 +55,10 @@ public sealed partial class GameRoot : Node
 
         Sfx = new Sfx { Name = "Sfx" };
         AddChild(Sfx);
+
+        var adProvider = new SimulatedAdProvider { Name = "AdProvider" };
+        AddChild(adProvider);
+        AdProvider = adProvider;
 
         try
         {
@@ -74,4 +80,6 @@ public sealed partial class GameRoot : Node
     public void GoToMenu() => GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, MenuScene);
 
     public void GoToBattle() => GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, BattleScene);
+
+    public void GoToItems() => GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, ItemsScene);
 }

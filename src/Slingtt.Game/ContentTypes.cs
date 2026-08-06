@@ -315,6 +315,16 @@ public sealed class GachaBalance
     public double CrossClassRefundPct { get; set; } = 0.6;
 }
 
+// Prompt 9 — rewarded ads. Unlocked by floor-clear progress rather than a
+// real-time timer, and capped per real-world day regardless of how many
+// unlocks are banked.
+public sealed class AdRewardBalance
+{
+    public int FloorClearsPerAdUnlock { get; set; } = 3;
+    public int PullsPerAd { get; set; } = 4;
+    public int MaxAdsPerDay { get; set; } = 6;
+}
+
 public sealed class FloorClearRewards
 {
     public double SlingCoresBase { get; set; } = 18;
@@ -355,5 +365,6 @@ public sealed class Balance
     public EnemySpecialsBalance EnemySpecials { get; set; } = new();
     public ProgressionBalance Progression { get; set; } = new();
     public GachaBalance Gacha { get; set; } = new();
+    public AdRewardBalance AdReward { get; set; } = new();
     public RewardsBalance Rewards { get; set; } = new();
 }

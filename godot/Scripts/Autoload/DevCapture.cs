@@ -11,9 +11,13 @@ namespace Slingtt.Render;
 //   --shot-delay <sec>   wait this long first (default 1.5)
 //   --autobattle         jump straight into the battle scene on boot
 //   --autoplay           fire the active hero automatically each turn
+//   --autoitems          jump straight into the items (armory) screen on boot
+//   --itemspage <name>   gacha|upgrade|evolution — which ItemsScreen page to
+//                        start on (implies --autoitems); default gacha
 public sealed partial class DevCapture : Node
 {
     public static bool AutoPlay { get; private set; }
+    public static string? ItemsPage { get; private set; }
 
     private string? _shotPath;
     private double _delay = 1.5;
@@ -26,6 +30,7 @@ public sealed partial class DevCapture : Node
 
         string[] args = OS.GetCmdlineUserArgs();
         bool autoBattle = false;
+        bool autoItems = false;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -43,6 +48,13 @@ public sealed partial class DevCapture : Node
                 case "--autoplay":
                     AutoPlay = true;
                     break;
+                case "--autoitems":
+                    autoItems = true;
+                    break;
+                case "--itemspage" when i + 1 < args.Length:
+                    ItemsPage = args[++i];
+                    autoItems = true;
+                    break;
             }
         }
 
@@ -50,6 +62,11 @@ public sealed partial class DevCapture : Node
         {
             GD.Print("[DevCapture] auto-entering battle");
             GameRoot.Instance?.GoToBattle();
+        }
+        else if (autoItems)
+        {
+            GD.Print("[DevCapture] auto-entering items screen");
+            GameRoot.Instance?.GoToItems();
         }
         if (_shotPath is null)
         {

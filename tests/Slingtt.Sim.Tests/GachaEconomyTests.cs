@@ -244,6 +244,24 @@ public class GachaEconomyTests
         Assert.True(second.WasDuplicate);
     }
 
+    [Fact]
+    public void Duplicate_NeverEntersInventory_AndAutoConvertsToBaseEssence()
+    {
+        Content c = BuildTestContent();
+        c.Balance.Gacha = TestBalance(AllRarity("Common"), AllRarity("Common"), AllRarity("Common"));
+        var save = new GachaSave();
+
+        GachaEconomy.Pull(c, save, GachaTab.Weapon, GachaTier.Tier1); // first copy, kept
+        PullResult dup = GachaEconomy.Pull(c, save, GachaTab.Weapon, GachaTier.Tier1); // duplicate
+
+        Assert.True(dup.WasDuplicate);
+        Assert.NotNull(dup.Item); // still shown, for the reveal UI
+        Assert.Equal("wpn_Common", dup.Item!.TemplateId);
+        Assert.Equal(10, dup.DuplicateEssenceGranted); // EssenceValueByRarityIndex[Common=0]
+        Assert.Single(save.Weapon.Items); // only the first copy is actually owned
+        Assert.Equal(10, save.WeaponEssence);
+    }
+
     // --- Enhance -------------------------------------------------------------
 
     [Fact]

@@ -75,6 +75,9 @@ public sealed class RunSave
     /// inventory, essence). Carried forward across a "new run" the same way
     /// currency balances are (see RunState.ResetRun).</summary>
     public GachaSave Gacha { get; set; } = new();
+
+    /// <summary>Prompt 9 — rewarded-ad progress. Carried forward the same way.</summary>
+    public AdRewardSave AdReward { get; set; } = new();
 }
 
 // Local run + meta-progression state. Persists so a resumed run keeps its place,
@@ -175,6 +178,25 @@ public sealed class RunState
         return result;
     }
 
+    // --- Prompt 9: rewarded ads -----------------------------------------------
+    // The ad itself never plays here — that's the caller's IAdProvider. These
+    // wrappers only decide eligibility and resolve the reward once the caller
+    // confirms the ad actually finished.
+
+    public AdRewardSave AdRewardState => _save.AdReward;
+
+    public bool CanWatchAd(DateTime utcNow) => AdRewardEconomy.CanWatchAd(_content.Balance.AdReward, _save.AdReward, utcNow);
+
+    public AdWatchResult WatchAd(GachaTab tab, DateTime utcNow)
+    {
+        AdWatchResult result = AdRewardEconomy.GrantReward(_content, _save.AdReward, _save.Gacha, tab, utcNow);
+        if (result.Success)
+        {
+            Persist();
+        }
+        return result;
+    }
+
     private void LoadOrCreate()
     {
         string? raw = _store.Load();
@@ -221,6 +243,7 @@ public sealed class RunState
             next.Balances = _save.Balances;
             next.GrantedIds = _save.GrantedIds;
             next.Gacha = _save.Gacha;
+            next.AdReward = _save.AdReward;
         }
         _save = next;
         PendingResult = null;
@@ -254,6 +277,14 @@ public sealed class RunState
 
         RewardAmounts rewards = Rewards.CalculateFloorRewards(
             floor, cls.IsBoss, isFirstClear, _content.Balance.Rewards);
+
+        // Prompt 9 — ad-unlock progress advances on the same idempotency gate
+        // as currency rewards, so retrying an already-cleared floor can't
+        // farm it.
+        if (!alreadyGranted)
+        {
+            AdRewardEconomy.OnFloorCleared(_content.Balance.AdReward, _save.AdReward);
+        }
 
         var lines = new List<RewardLine>();
         foreach (ResourceKind kind in Rewards.Order)

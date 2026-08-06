@@ -82,6 +82,11 @@
     "sameClassRefundPct": 1.0,
     "crossClassRefundPct": 0.6
   },
+  "adReward": {
+    "floorClearsPerAdUnlock": 3,
+    "pullsPerAd": 4,
+    "maxAdsPerDay": 6
+  },
   "rewards": {
     "floorClear": {
       "slingCoresBase": 18,

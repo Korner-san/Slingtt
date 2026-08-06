@@ -57,6 +57,14 @@ public sealed partial class MainMenu : Control
         };
         root.AddChild(play);
 
+        Button armory = UiKit.MakeButton("ARMORY", Palette.RarityRare, primary: false, fontSize: 22);
+        armory.Pressed += () =>
+        {
+            game.Sfx.Play(SfxId.UiTap);
+            game.GoToItems();
+        };
+        root.AddChild(armory);
+
         if (resuming)
         {
             Button reset = UiKit.MakeButton("NEW RUN  (keeps rewards)", Palette.UiSurfaceRaised, primary: false, fontSize: 22);

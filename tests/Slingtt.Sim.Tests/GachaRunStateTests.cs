@@ -116,4 +116,45 @@ public class GachaRunStateTests
 
         Assert.Empty(run.GachaTabStateOf(GachaTab.Weapon).Items);
     }
+
+    // --- Prompt 9: rewarded ads ------------------------------------------------
+
+    [Fact]
+    public void ClearingFloors_BanksAnAdUnlock_ButOnlyOncePerFloor()
+    {
+        Content c = Content.Load();
+        var run = new RunState(c, new MemoryStore());
+        var hero = new PostBattleHero { HeroId = run.Team[0].HeroId, Name = "x", Hp = 500, MaxHp = 1000 };
+        int perUnlock = c.Balance.AdReward.FloorClearsPerAdUnlock;
+
+        for (int i = 0; i < perUnlock; i++)
+        {
+            run.ResolveFloorClear(new List<PostBattleHero> { hero }, turnsUsed: 3); // re-resolving floor 1 repeatedly
+        }
+
+        // Resolving the SAME already-granted floor again must not farm unlocks.
+        Assert.Equal(0, run.AdRewardState.AdUnlocksAvailable);
+
+        run.ContinueToNextFloor();
+        run.ResolveFloorClear(new List<PostBattleHero> { hero }, turnsUsed: 3); // a genuinely new floor clear
+        // 1 real clear from the repeated-floor-1 loop above (the other perUnlock-1
+        // calls were no-ops) + 1 from this genuinely new floor = 2.
+        Assert.Equal(2, run.AdRewardState.FloorClearsSinceLastUnlock);
+    }
+
+    [Fact]
+    public void WatchAd_GrantsPullsPerAdFreePulls_WithoutTouchingSlingCores()
+    {
+        Content c = Content.Load();
+        var run = new RunState(c, new MemoryStore());
+        run.AdRewardState.AdUnlocksAvailable = 1;
+        int slingCoresBefore = run.BalanceOf(ResourceKind.SlingCores);
+
+        AdWatchResult r = run.WatchAd(GachaTab.Weapon, DateTime.UtcNow);
+
+        Assert.True(r.Success);
+        Assert.Equal(c.Balance.AdReward.PullsPerAd, r.Pulls.Count);
+        Assert.Equal(slingCoresBefore, run.BalanceOf(ResourceKind.SlingCores)); // ad pulls are free
+        Assert.Equal(0, run.AdRewardState.AdUnlocksAvailable);
+    }
 }
