@@ -39,6 +39,7 @@ public static class BattleSim
         self.PierceBudgetUsed = 0;
         self.ComboFiredThisTravel = false;
         self.DistanceTravelledThisTravel = 0;
+        self.TrailDropCooldownTicks = 0; // Prompt 7 — first travel tick always drops a hazard point
 
         world.Phase = Phase.Travelling;
         world.Events.Add(new SimEvent
@@ -153,6 +154,14 @@ public static class BattleSim
                     Combo.CheckContact(world, cfg, self);
                 }
 
+                // Prompt 7 — trail hazards: a Trail-type actor drops a hazard
+                // point periodically along its own path; whoever is currently
+                // travelling (either side) can walk into one laid by the other
+                // team. Both are independent of the opposing-team collision
+                // above — a hazard never deflects or stops anything.
+                Hazards.MaybeDropTrail(world, cfg, self);
+                Hazards.CheckContact(world, cfg, self);
+
                 // Friction after integration, not before.
                 self.Vel *= cfg.FrictionPerTick;
 
@@ -177,10 +186,14 @@ public static class BattleSim
             }
 
             case Phase.Ultimate:
-                Ultimates.FireWeaponUltimate(world, cfg, world.ActiveActor());
+            {
+                Actor self = world.ActiveActor();
+                Ultimates.FireWeaponUltimate(world, cfg, self);
+                MarkerSpit.FireIfApplicable(world, cfg, self); // Prompt 7 — enemies never have Weapon.Ultimate, so this never doubles up with the line above
                 world.Phase = Phase.Settling;
                 world.Tick += 1;
                 return;
+            }
 
             case Phase.Settling:
                 if (world.LivingCount(Team.Enemy) == 0)

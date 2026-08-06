@@ -16,5 +16,65 @@
       { "enemyId": "enm_gloom_imp" }
     ]
   },
-  { "floor": 5, "enemies": [{ "enemyId": "enm_warden_of_five" }] }
+  { "floor": 5, "enemies": [{ "enemyId": "enm_warden_of_five" }] },
+
+  {
+    "floor": 6,
+    "enemies": [{ "enemyId": "enm_gloom_imp" }, { "enemyId": "enm_trail_layer" }]
+  },
+  {
+    "floor": 7,
+    "enemies": [{ "enemyId": "enm_pike_husk" }, { "enemyId": "enm_chain_hunter" }]
+  },
+  {
+    "floor": 8,
+    "enemies": [{ "enemyId": "enm_boulder_brute" }, { "enemyId": "enm_marker" }]
+  },
+  {
+    "floor": 9,
+    "enemies": [
+      { "enemyId": "enm_trail_layer" },
+      { "enemyId": "enm_chain_hunter" },
+      { "enemyId": "enm_marker" }
+    ]
+  },
+  { "floor": 10, "enemies": [{ "enemyId": "enm_toxic_colossus" }] },
+
+  {
+    "floor": 11,
+    "enemies": [
+      { "enemyId": "enm_gloom_imp" },
+      { "enemyId": "enm_trail_layer" },
+      { "enemyId": "enm_chain_hunter" }
+    ]
+  },
+  {
+    "floor": 12,
+    "enemies": [
+      { "enemyId": "enm_pike_husk" },
+      { "enemyId": "enm_marker" },
+      { "enemyId": "enm_chain_hunter" }
+    ]
+  },
+  {
+    "floor": 13,
+    "enemies": [
+      { "enemyId": "enm_boulder_brute" },
+      { "enemyId": "enm_trail_layer" },
+      { "enemyId": "enm_marker" }
+    ]
+  },
+  {
+    "floor": 14,
+    "enemies": [
+      { "enemyId": "enm_trail_layer" },
+      { "enemyId": "enm_chain_hunter" },
+      { "enemyId": "enm_marker" },
+      { "enemyId": "enm_gloom_imp" }
+    ]
+  },
+  {
+    "floor": 15,
+    "enemies": [{ "enemyId": "enm_chain_reaper" }, { "enemyId": "enm_mark_hunter" }]
+  }
 ]

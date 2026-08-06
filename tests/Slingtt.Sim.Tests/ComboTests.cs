@@ -123,7 +123,7 @@ public class ComboTests
     {
         Actor toucher = Hero("toucher", new Vec2(5, 5));
         Actor teammate = Hero("teammate", new Vec2(5.3, 5), ult: Aftershock(2.0));
-        teammate.IsMarked = true;
+        teammate.MarkedTurns = 2; // Prompt 7 — IsMarked is now MarkedTurns > 0
         World w = BuildWorld(toucher, teammate);
 
         Combo.CheckContact(w, Cfg(), toucher);

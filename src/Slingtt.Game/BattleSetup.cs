@@ -34,6 +34,8 @@ public static class BattleSetup
     {
         "lance" => WeaponType.Lance,
         "hammer" => WeaponType.Hammer,
+        "trail" => WeaponType.Trail, // Prompt 7 — enemy-only
+        "chain" => WeaponType.Chain, // Prompt 7 — enemy-only
         _ => WeaponType.Sword,
     };
 
@@ -303,11 +305,12 @@ public static class BattleSetup
             {
                 throw new InvalidOperationException($"battleSetup: unknown enemy {enemyId}");
             }
+            var pos = new Vec2(arena.W * (i + 1) / (n + 1), i % 2 == 0 ? 2.0 : 3.0);
             actors.Add(new ActorInit
             {
                 Id = $"{def.Id}#{i}",
                 Team = Team.Enemy,
-                Pos = new Vec2(arena.W * (i + 1) / (n + 1), i % 2 == 0 ? 2.0 : 3.0),
+                Pos = pos,
                 Radius = def.Radius,
                 Hp = SimMath.RoundJs(def.Hp * scale),
                 Def = SimMath.RoundJs(def.Def * scale),
@@ -319,8 +322,10 @@ public static class BattleSetup
                     BounceDecay = def.BounceDecay ?? 0.1,
                     PierceCount = def.PierceCount ?? 1,
                     AoeRadius = def.AoeRadius ?? 1,
+                    HasMarkerSpit = def.HasMarkerSpit,
                 },
                 MoveDurationTicks = SimMath.RoundJsInt(def.MoveDuration * tickRate),
+                SplitOnDeath = BuildSplitChildren(content, def, scale, tickRate, $"{def.Id}#{i}", pos),
             });
         }
 
@@ -331,5 +336,51 @@ public static class BattleSetup
             BoundsH = arena.H,
             Actors = actors,
         };
+    }
+
+    /// <summary>Prompt 7 — pre-resolves a split-capable boss's death-spawn
+    /// blueprints, at the same floor-scaling multiplier as everything else on
+    /// this floor (a standard enemy is already weaker than its boss variant
+    /// by its own base stats, so no extra split-specific penalty is needed).
+    /// Children never split further — the sim's own SpawnActor doesn't
+    /// recurse into these blueprints' own SplitOnDeath, so this only needs to
+    /// resolve one level deep regardless.</summary>
+    private static List<ActorInit>? BuildSplitChildren(
+        Content content, EnemyDef parent, double scale, int tickRate, string parentId, Vec2 pos)
+    {
+        if (parent.SplitOnDeath is not { Count: > 0 } childIds)
+        {
+            return null;
+        }
+
+        var children = new List<ActorInit>(childIds.Count);
+        for (int i = 0; i < childIds.Count; i++)
+        {
+            if (!content.Enemies.TryGetValue(childIds[i], out EnemyDef? childDef))
+            {
+                throw new InvalidOperationException($"battleSetup: unknown split-on-death enemy {childIds[i]} for {parent.Id}");
+            }
+            children.Add(new ActorInit
+            {
+                Id = $"{parentId}_split{i}",
+                Team = Team.Enemy,
+                Pos = pos, // Damage.SpawnSplitChildren repositions around the actual death point
+                Radius = childDef.Radius,
+                Hp = SimMath.RoundJs(childDef.Hp * scale),
+                Def = SimMath.RoundJs(childDef.Def * scale),
+                Weapon = new WeaponStats
+                {
+                    Type = ParseWeaponType(childDef.WeaponType),
+                    Atk = SimMath.RoundJs(childDef.Atk * scale),
+                    Tier = 0,
+                    BounceDecay = childDef.BounceDecay ?? 0.1,
+                    PierceCount = childDef.PierceCount ?? 1,
+                    AoeRadius = childDef.AoeRadius ?? 1,
+                    HasMarkerSpit = childDef.HasMarkerSpit,
+                },
+                MoveDurationTicks = SimMath.RoundJsInt(childDef.MoveDuration * tickRate),
+            });
+        }
+        return children;
     }
 }

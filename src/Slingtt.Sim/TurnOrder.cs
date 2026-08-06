@@ -63,6 +63,8 @@ public static class TurnOrder
             RegenBenchedHeroes(world, cfg);
             DecayComboIfNoContact(world);
             ResetSiphonCaps(world);
+            DecayMarks(world);
+            Hazards.PruneExpired(world);
 
             if (actor.StunnedTurns > 0)
             {
@@ -140,6 +142,23 @@ public static class TurnOrder
             if (a.Team == Team.Hero)
             {
                 a.SiphonHealedThisTurn = 0;
+            }
+        }
+    }
+
+    /// <summary>Prompt 7 — a Marker's mark ticks down once every turn-grant,
+    /// same cadence as everything else in this section, rather than being tied
+    /// to the marked hero's own turns: the mark's actual effect (blocking
+    /// Prompt 5's contact combo) is checked on the OTHER hero's turns, so
+    /// scoping the countdown to "any turn" is what makes "for 2 turns" mean
+    /// roughly 2 turns of real game time regardless of which hero it lands on.</summary>
+    private static void DecayMarks(World world)
+    {
+        foreach (Actor a in world.Actors)
+        {
+            if (a.Team == Team.Hero && a.MarkedTurns > 0)
+            {
+                a.MarkedTurns -= 1;
             }
         }
     }

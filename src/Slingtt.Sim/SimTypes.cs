@@ -16,6 +16,16 @@ public enum WeaponType
     Sword,
     Lance,
     Hammer,
+
+    /// <summary>Prompt 7 — enemy-only. Passes through every contact undamaged
+    /// and undeflected (Weapons.TrailBehavior); the real threat is the toxic
+    /// hazard it drops along its path (Hazards.MaybeDropTrail).</summary>
+    Trail,
+
+    /// <summary>Prompt 7 — enemy-only. Elastic-bounces like Sword but halts
+    /// outright after its second hero contact (Weapons.ChainBehavior) — the
+    /// "aims for one hero, then the other" AI lives in EnemyAi.</summary>
+    Chain,
 }
 
 public enum Phase
@@ -34,6 +44,11 @@ public enum HitKind
     Pierce,
     Ultimate,
     ArmorReflect,
+
+    /// <summary>Prompt 7 — a toxic trail hazard hit. Uses the standard contact
+    /// cooldown like Contact (not exempt like Aoe/Ultimate), but each hazard
+    /// point can only ever hit a given victim once regardless — see Hazard.</summary>
+    Hazard,
 }
 
 public enum WeaponUltKind
@@ -118,6 +133,12 @@ public sealed class WeaponStats
     public int PierceCount { get; init; } = 1; // lance
     public double AoeRadius { get; init; } = 1.0; // hammer
     public WeaponUltimateSpec? Ultimate { get; init; } // null below tier 1 (item level < 10)
+
+    /// <summary>Prompt 7 — enemy-only "marker" behaviour: after this actor's
+    /// travel/contact resolves, it spits at the farthest active hero and marks
+    /// them (MarkerSpit.FireIfApplicable, called from the Ultimate phase
+    /// alongside Ultimates.FireWeaponUltimate — heroes never set this).</summary>
+    public bool HasMarkerSpit { get; init; }
 }
 
 public sealed class ArmorStats
@@ -169,9 +190,27 @@ public sealed class Actor
     /// lingering overlap across several ticks). Reset on every launch.</summary>
     public bool ComboFiredThisTravel;
 
-    /// <summary>Plumbed for Prompt 7 ("marked"); always false until then. A
-    /// marked hero can never be the target of a Prompt 5 contact combo.</summary>
-    public bool IsMarked;
+    /// <summary>Prompt 7 — turns left under a Marker enemy's mark. Ticks down
+    /// once every turn-grant (TurnOrder), any actor's turn, same cadence as
+    /// bench regen/combo decay/Siphon's reset — not tied to the marked hero's
+    /// own turns, since the mark's actual effect (blocking Prompt 5's contact
+    /// combo) is checked on the OTHER hero's turns, whenever they're the one
+    /// travelling and might touch this marked one.</summary>
+    public int MarkedTurns;
+
+    /// <summary>A marked hero can never be the target of a Prompt 5 contact
+    /// combo — Combo.CheckContact checks this on the stationary teammate.</summary>
+    public bool IsMarked => MarkedTurns > 0;
+
+    /// <summary>Prompt 7 — Trail weapon type: ticks left before the next hazard
+    /// point drops. 0 on a fresh launch so the first travel tick always drops
+    /// one immediately.</summary>
+    public int TrailDropCooldownTicks;
+
+    /// <summary>Prompt 7 — boss "splits on death": pre-resolved spawn blueprints
+    /// for the actors this one becomes when it dies (Damage.Apply). Null for
+    /// everything except split-capable bosses.</summary>
+    public List<ActorInit>? SplitOnDeath;
 
     /// <summary>Prompt 6 — Carry (Light archetype): accumulated path length
     /// (not straight-line displacement — every sub-tick delta, so wall bounces
@@ -218,6 +257,8 @@ public enum SimEventKind
     BattleEnd,
     Swap, // Prompt 4: ActorId = outgoing (benched) hero, TargetId = incoming (activated) hero
     ComboContact, // Prompt 5: ActorId = toucher, TargetId = touched hero, Amount = new stack count
+    MarkApplied, // Prompt 7: ActorId = marker enemy, TargetId = marked hero
+    EnemySplit, // Prompt 7: ActorId = the boss that died, TargetId = id of the spawned split, Pos = spawn position
 }
 
 /// <summary>One flat struct instead of a class hierarchy: the sim appends events
@@ -226,7 +267,7 @@ public struct SimEvent
 {
     public SimEventKind Kind;
     public string ActorId;   // acting actor, or damage source for Hit
-    public string TargetId;  // Hit, Swap, ComboContact
+    public string TargetId;  // Hit, Swap, ComboContact, MarkApplied, EnemySplit
     public Vec2 Pos;
     public Vec2 Dir;         // Launch/WeaponUltimate direction, WallBounce normal
     public double Amount;    // damage / heal / shield / bounce speed / drawRatio

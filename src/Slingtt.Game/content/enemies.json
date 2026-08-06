@@ -50,5 +50,86 @@
     "aoeRadius": 2.0,
     "moveDuration": 2.0,
     "modelId": "mdl_enm_warden_of_five"
+  },
+
+  {
+    "id": "enm_trail_layer",
+    "nameKey": "enm_trail_layer.name",
+    "kind": "standard",
+    "hp": 280,
+    "def": 20,
+    "atk": 45,
+    "radius": 0.45,
+    "weaponType": "trail",
+    "moveDuration": 2.0,
+    "modelId": "mdl_enm_trail_layer"
+  },
+  {
+    "id": "enm_chain_hunter",
+    "nameKey": "enm_chain_hunter.name",
+    "kind": "standard",
+    "hp": 320,
+    "def": 30,
+    "atk": 65,
+    "radius": 0.5,
+    "weaponType": "chain",
+    "moveDuration": 1.6,
+    "modelId": "mdl_enm_chain_hunter"
+  },
+  {
+    "id": "enm_marker",
+    "nameKey": "enm_marker.name",
+    "kind": "standard",
+    "hp": 260,
+    "def": 25,
+    "atk": 50,
+    "radius": 0.45,
+    "weaponType": "sword",
+    "bounceDecay": 0.1,
+    "hasMarkerSpit": true,
+    "moveDuration": 1.6,
+    "modelId": "mdl_enm_marker"
+  },
+
+  {
+    "id": "enm_toxic_colossus",
+    "nameKey": "enm_toxic_colossus.name",
+    "kind": "boss",
+    "hp": 2600,
+    "def": 80,
+    "atk": 70,
+    "radius": 0.9,
+    "weaponType": "trail",
+    "moveDuration": 2.4,
+    "splitOnDeath": ["enm_trail_layer", "enm_trail_layer"],
+    "modelId": "mdl_enm_toxic_colossus"
+  },
+  {
+    "id": "enm_chain_reaper",
+    "nameKey": "enm_chain_reaper.name",
+    "kind": "boss",
+    "hp": 2800,
+    "def": 85,
+    "atk": 95,
+    "radius": 0.85,
+    "weaponType": "chain",
+    "moveDuration": 1.8,
+    "splitOnDeath": ["enm_chain_hunter", "enm_chain_hunter"],
+    "modelId": "mdl_enm_chain_reaper"
+  },
+  {
+    "id": "enm_mark_hunter",
+    "nameKey": "enm_mark_hunter.name",
+    "kind": "boss",
+    "hp": 2400,
+    "def": 80,
+    "atk": 80,
+    "radius": 0.8,
+    "weaponType": "sword",
+    "bounceDecay": 0.1,
+    "hasMarkerSpit": true,
+    "moveDuration": 1.7,
+    "splitOnDeath": ["enm_marker", "enm_marker"],
+    "modelId": "mdl_enm_mark_hunter"
   }
 ]

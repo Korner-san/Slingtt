@@ -66,7 +66,10 @@ public sealed class HammerBehavior : IWeaponBehavior
         }
 
         double radius = self.Weapon.AoeRadius;
-        foreach (Actor enemy in world.Actors)
+        // Prompt 7 — snapshot before iterating: an AOE kill on a split-capable
+        // boss spawns its children straight into world.Actors mid-enumeration
+        // otherwise (see the identical comment in Ultimates.FireShapeQuery).
+        foreach (Actor enemy in world.Actors.ToArray())
         {
             if (enemy.Team == self.Team || !enemy.IsAlive)
             {
@@ -86,16 +89,52 @@ public sealed class HammerBehavior : IWeaponBehavior
     }
 }
 
+/// <summary>Prompt 7 — Trail (enemy-only): deals no contact damage at all and
+/// never deflects or stops — truly passes through everything. The actual
+/// threat is the toxic hazard it drops along its path tick by tick
+/// (Hazards.MaybeDropTrail, called from BattleSim's Travelling case, not from
+/// here — this behavior only governs what happens on an actor-actor contact,
+/// and Trail deliberately does nothing there).</summary>
+public sealed class TrailBehavior : IWeaponBehavior
+{
+    public ContactResult OnEnemyContact(World world, SimConfig cfg, Actor self, Actor target, ContactInfo hit)
+        => new() { Deflect = false, Stop = false };
+}
+
+/// <summary>Prompt 7 — Chain (enemy-only): elastic-bounces like Sword on its
+/// first hero contact, then halts outright on its second — "aims to bounce
+/// off one hero into the other" is EnemyAi's targeting, not this; this is
+/// just the two-hits-and-done contact rule that makes the chain-through
+/// possible at all. Reuses HitsThisTravel (already tracked, reset on
+/// launch) rather than a new counter.</summary>
+public sealed class ChainBehavior : IWeaponBehavior
+{
+    public ContactResult OnEnemyContact(World world, SimConfig cfg, Actor self, Actor target, ContactInfo hit)
+    {
+        double? dealt = Damage.Apply(world, cfg, self, target, 1.0, HitKind.Contact, hit.Pos);
+        if (dealt is not null)
+        {
+            self.HitsThisTravel += 1;
+        }
+        bool halt = self.HitsThisTravel >= 2;
+        return new ContactResult { Deflect = !halt, Stop = halt };
+    }
+}
+
 public static class Weapons
 {
     private static readonly SwordBehavior Sword = new();
     private static readonly LanceBehavior Lance = new();
     private static readonly HammerBehavior Hammer = new();
+    private static readonly TrailBehavior Trail = new();
+    private static readonly ChainBehavior Chain = new();
 
     public static IWeaponBehavior Behavior(WeaponType type) => type switch
     {
         WeaponType.Lance => Lance,
         WeaponType.Hammer => Hammer,
+        WeaponType.Trail => Trail,
+        WeaponType.Chain => Chain,
         _ => Sword,
     };
 }

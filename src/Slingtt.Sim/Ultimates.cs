@@ -136,7 +136,12 @@ public static class Ultimates
         timeline.Beats.Add(new TimelineBeat { OffsetSeconds = timeCursor, Kind = "shape" });
         double hitCursor = timeCursor + HitBeatStaggerSeconds;
 
-        foreach (Actor target in world.Actors)
+        // Prompt 7 — snapshot before iterating: a hit here can kill a
+        // split-capable boss, and Damage.Apply spawns its children straight
+        // into world.Actors. Enumerating the live list while that happens
+        // throws; a snapshot also correctly keeps the newly spawned children
+        // out of this same shape query's damage pass.
+        foreach (Actor target in world.Actors.ToArray())
         {
             if (target.Team == self.Team || !target.IsAlive || target.IsBenched)
             {

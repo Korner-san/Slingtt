@@ -51,6 +51,12 @@
     "previewFractionBase": 0.6,
     "previewFractionFocusBonus": 0.4
   },
+  "enemySpecials": {
+    "hazardDamageMult": 0.5,
+    "hazardRadius": 0.6,
+    "hazardDropIntervalTicks": 18,
+    "markDurationTurns": 2
+  },
   "progression": {
     "levelCoeff": 0.06,
     "maxLevel": 30,

@@ -68,6 +68,13 @@ public sealed class EnemyDef
     public double? AoeRadius { get; set; }
     public double MoveDuration { get; set; }
     public string ModelId { get; set; } = "";
+
+    // Prompt 7 — enemy specials. HasMarkerSpit maps straight onto
+    // WeaponStats.HasMarkerSpit. SplitOnDeath is a list of enemy ids (from
+    // this same file) that spawn around this one's death position when it
+    // dies — empty/null for everything except split-capable bosses.
+    public bool HasMarkerSpit { get; set; }
+    public List<string>? SplitOnDeath { get; set; }
 }
 
 public sealed class FloorEnemyEntry
@@ -224,6 +231,16 @@ public sealed class ArchetypeBalance
     public double PreviewFractionFocusBonus { get; set; } = 0.4;
 }
 
+// Prompt 7 — enemy specials (floors 6-15): trail hazards, and how long a
+// Marker's mark blocks the Prompt 5 contact combo.
+public sealed class EnemySpecialsBalance
+{
+    public double HazardDamageMult { get; set; } = 0.5;
+    public double HazardRadius { get; set; } = 0.6;
+    public int HazardDropIntervalTicks { get; set; } = 18;
+    public int MarkDurationTurns { get; set; } = 2;
+}
+
 public sealed class ProgressionBalance
 {
     public double LevelCoeff { get; set; } = 0.06;
@@ -288,6 +305,7 @@ public sealed class Balance
     public UltimateEscalationBalance UltimateEscalation { get; set; } = new();
     public BenchBalance Bench { get; set; } = new();
     public ArchetypeBalance Archetype { get; set; } = new();
+    public EnemySpecialsBalance EnemySpecials { get; set; } = new();
     public ProgressionBalance Progression { get; set; } = new();
     public GachaBalance Gacha { get; set; } = new();
     public RewardsBalance Rewards { get; set; } = new();

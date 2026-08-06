@@ -15,6 +15,10 @@ public sealed class ActorInit
     public ArmorStats? Armor { get; init; }
     public int MoveDurationTicks { get; init; }
     public bool IsBenched { get; init; }
+
+    /// <summary>Prompt 7 — pre-resolved spawn blueprints for a split-on-death
+    /// boss's children. Null for everything else.</summary>
+    public List<ActorInit>? SplitOnDeath { get; init; }
 }
 
 public sealed class WorldSetup
@@ -60,6 +64,11 @@ public sealed class World
     /// TurnOrder at the start of the next turn to decide whether to decay.</summary>
     public bool ComboContactThisTurn;
 
+    /// <summary>Prompt 7 — active toxic trail hazards. Appended by
+    /// Hazards.MaybeDropTrail, checked by Hazards.CheckContact, pruned by
+    /// TurnOrder's per-turn housekeeping once their round has passed.</summary>
+    public List<Hazard> Hazards = new();
+
     public static World Create(WorldSetup setup)
     {
         var w = new World
@@ -76,23 +85,35 @@ public sealed class World
         };
         foreach (ActorInit init in setup.Actors)
         {
-            w.Actors.Add(new Actor
-            {
-                Id = init.Id,
-                Team = init.Team,
-                Pos = init.Pos,
-                Vel = Vec2.Zero,
-                Radius = init.Radius,
-                Hp = init.Hp,
-                MaxHp = init.Hp,
-                Def = init.Def,
-                Weapon = init.Weapon,
-                Armor = init.Armor,
-                MoveDurationTicks = init.MoveDurationTicks,
-                IsBenched = init.IsBenched,
-            });
+            w.SpawnActor(init);
         }
         return w;
+    }
+
+    /// <summary>Prompt 7 — also used mid-battle for a boss's split-on-death
+    /// children (Damage.Apply), not just initial setup. Appending is safe:
+    /// TurnOrder recomputes the actor count every call, so a newly spawned
+    /// actor is picked up automatically without disturbing existing indices.</summary>
+    public Actor SpawnActor(ActorInit init)
+    {
+        var a = new Actor
+        {
+            Id = init.Id,
+            Team = init.Team,
+            Pos = init.Pos,
+            Vel = Vec2.Zero,
+            Radius = init.Radius,
+            Hp = init.Hp,
+            MaxHp = init.Hp,
+            Def = init.Def,
+            Weapon = init.Weapon,
+            Armor = init.Armor,
+            MoveDurationTicks = init.MoveDurationTicks,
+            IsBenched = init.IsBenched,
+            SplitOnDeath = init.SplitOnDeath,
+        };
+        Actors.Add(a);
+        return a;
     }
 
     public Actor GetActor(string id)
@@ -161,6 +182,7 @@ public sealed class World
             ContactLog = new Dictionary<string, int>(ContactLog),
             ComboStacks = ComboStacks,
             ComboContactThisTurn = ComboContactThisTurn,
+            Hazards = Hazards, // read-only from the clone's perspective (DamageEnabled=false), sharing is safe
         };
         foreach (Actor a in Actors)
         {

@@ -82,6 +82,7 @@ public static class Damage
                 ActorId = target.Id,
                 Pos = target.Pos,
             });
+            SpawnSplitChildren(world, target);
         }
         else if (!target.ArmorUltFired
                  && target.Hp / target.MaxHp < cfg.ArmorUltThreshold
@@ -108,6 +109,52 @@ public static class Damage
         }
 
         return dealt;
+    }
+
+    /// <summary>Prompt 7 — "splitting on death": a split-capable boss's
+    /// pre-resolved children (BattleSetup) spawn around its death position,
+    /// spread out so they don't stack exactly on top of each other. Public so
+    /// Hazards.CheckContact's own death path can call it too, even though
+    /// nothing in the current content can actually put a split-capable actor
+    /// on the receiving end of a hazard today.</summary>
+    public static void SpawnSplitChildren(World world, Actor target)
+    {
+        if (target.SplitOnDeath is not { Count: > 0 } children)
+        {
+            return;
+        }
+
+        double step = 2 * Math.PI / children.Count;
+        const double offset = 0.8;
+        for (int i = 0; i < children.Count; i++)
+        {
+            double angle = i * step;
+            ActorInit blueprint = children[i];
+            var init = new ActorInit
+            {
+                Id = blueprint.Id,
+                Team = blueprint.Team,
+                Pos = new Vec2(
+                    target.Pos.X + Math.Cos(angle) * offset,
+                    target.Pos.Y + Math.Sin(angle) * offset),
+                Radius = blueprint.Radius,
+                Hp = blueprint.Hp,
+                Def = blueprint.Def,
+                Weapon = blueprint.Weapon,
+                Armor = blueprint.Armor,
+                MoveDurationTicks = blueprint.MoveDurationTicks,
+                IsBenched = blueprint.IsBenched,
+                SplitOnDeath = blueprint.SplitOnDeath,
+            };
+            Actor spawned = world.SpawnActor(init);
+            world.Events.Add(new SimEvent
+            {
+                Kind = SimEventKind.EnemySplit,
+                ActorId = target.Id,
+                TargetId = spawned.Id,
+                Pos = spawned.Pos,
+            });
+        }
     }
 
     private static void FireArmorUltimate(World world, Actor actor)

@@ -48,6 +48,13 @@ public sealed class SimConfig
     public double PreviewFractionBase { get; init; } = 0.6;
     public double PreviewFractionFocusBonus { get; init; } = 0.4;
 
+    // Prompt 7 — enemy specials. HazardDamageMult is against the trail-layer's
+    // own Atk, mirroring how every other damage source here is Atk-relative.
+    public double HazardDamageMult { get; init; } = 0.5;
+    public double HazardRadius { get; init; } = 0.6;
+    public int HazardDropIntervalTicks { get; init; } = 18; // ~0.15s at 120 ticks/sec
+    public int MarkDurationTurns { get; init; } = 2;
+
     public double Dt => 1.0 / TickRate;
 
     private double _frictionPerTick = double.NaN;
