@@ -20,6 +20,10 @@ public sealed class RenderActor
     public bool Alive;
     public bool Active;
     public bool Benched;
+
+    /// <summary>Prompt 10 — battle feedback layer's "mark visual": true while
+    /// MarkedTurns > 0 (Prompt 7's Marker enemies).</summary>
+    public bool Marked;
 }
 
 public sealed class AimState
@@ -30,6 +34,12 @@ public sealed class AimState
     public double DrawRatio;
     public bool Legal;      // false below the cancel threshold
     public Prediction? Prediction; // sim-space points/bounces
+
+    /// <summary>Prompt 10 — the aiming hero's weapon ultimate shape, if they
+    /// have one unlocked, for the render layer's live footprint preview at
+    /// the predicted landing point. Null below evolution tier 1 (item level
+    /// under 10), same gate as the ultimate itself not existing yet.</summary>
+    public ShapeDef? UltimateShape;
 }
 
 // Framework-free owner of a running battle: no engine types here. The render
@@ -241,6 +251,7 @@ public sealed class BattleController
                 Alive = actor.IsAlive,
                 Active = World.ActiveActorId == actor.Id,
                 Benched = actor.IsBenched,
+                Marked = actor.IsMarked,
             });
         }
         return outp;
@@ -254,6 +265,13 @@ public sealed class BattleController
     public double MinDrawRatio => _cfg.MinDrawRatio;
     public double ArenaW => World.BoundsW;
     public double ArenaH => World.BoundsH;
+
+    /// <summary>Prompt 10 — battle feedback layer's "trail visual": the
+    /// render layer syncs against this every frame the same way it syncs
+    /// actor positions, rather than reacting to a one-shot spawn event (a
+    /// hazard has no spawn event of its own to react to; it just appears in
+    /// this list).</summary>
+    public IReadOnlyList<Hazard> Hazards => World.Hazards;
 
     public bool IsAwaitingHeroInput()
         => World.Phase == Phase.Aiming
@@ -385,6 +403,7 @@ public sealed class BattleController
             DrawRatio = drawRatio,
             Legal = legal,
             Prediction = prediction,
+            UltimateShape = self.Weapon.Ultimate?.Shape,
         };
     }
 

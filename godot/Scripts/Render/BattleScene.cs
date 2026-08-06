@@ -31,6 +31,7 @@ public sealed partial class BattleScene : Node3D
     private Vec2 _dragSim;
     private bool _resolved; // battle end handled exactly once
     private Vector2I _lastViewport;
+    private float _autoAimHoldElapsed = -1f; // -1 = not currently holding a `--holdaim` shot
 
     public override void _Ready()
     {
@@ -159,12 +160,13 @@ public sealed partial class BattleScene : Node3D
 
         if (DevCapture.AutoPlay && _controller.IsAwaitingHeroInput())
         {
-            AutoFire();
+            AutoFire((float)delta);
         }
 
         _controller.Advance(delta);
         DrainEvents();
         SyncActors();
+        _vfx.SyncHazards(_controller.Hazards); // Prompt 10 — "trail visuals": no spawn event of its own, synced every frame
 
         CameraFitter.ApplyRig(_camera, _fit, (float)_controller.ShakeTrauma, (float)_controller.CameraPunch, _clock);
         _hud.UpdateBattle(_controller, _visuals);
@@ -194,13 +196,41 @@ public sealed partial class BattleScene : Node3D
                 ra.Active,
                 _clock);
             view.SetHealth((float)(ra.MaxHp > 0 ? ra.Hp / ra.MaxHp : 0), ra.ShieldActive);
+            view.SetMarked(ra.Marked);
         }
     }
 
     private void DrainEvents()
     {
-        foreach (SimEvent ev in _controller.DrainEvents())
+        List<SimEvent> events = _controller.DrainEvents();
+
+        // Prompt 10 — a WeaponUltimate's own Hit events resolved in the same
+        // sim tick, in the same order as its ResolutionTimeline's "hit" beats
+        // (Ultimates.FireShapeQuery adds both together per target). Consuming
+        // exactly that many of them here — wherever they fall among whatever
+        // else is interspersed (a kill's Death, Prompt 6 Siphon's Heal, an
+        // armor ultimate trigger) — and staggering them through VfxView.Defer
+        // is what turns "telegraph before every strike" and "staggered damage
+        // numbers" from data (Prompt 1's timeline) into something the player
+        // actually sees, instead of the whole ultimate flashing at once.
+        // Everything NOT captured this way (deaths, heals, shields, ...)
+        // still fires immediately below, exactly as before.
+        var consumedHitIndices = new HashSet<int>();
+        for (int i = 0; i < events.Count; i++)
         {
+            if (events[i].Kind == SimEventKind.WeaponUltimate && events[i].WeaponUlt is { } ultSpec)
+            {
+                ScheduleWeaponUltimateTimeline(events[i], ultSpec, events, i, consumedHitIndices);
+            }
+        }
+
+        for (int i = 0; i < events.Count; i++)
+        {
+            if (consumedHitIndices.Contains(i))
+            {
+                continue;
+            }
+            SimEvent ev = events[i];
             switch (ev.Kind)
             {
                 case SimEventKind.Launch:
@@ -212,18 +242,14 @@ public sealed partial class BattleScene : Node3D
                     _game.Sfx.Play(SfxId.WallBounce, -14f);
                     break;
 
-                case SimEventKind.Hit:
-                {
-                    bool targetIsHero = _visuals.TryGetValue(ev.TargetId, out ActorVisual? tv)
-                                        && tv.Team == Team.Hero;
-                    _vfx.OnHit(ev.Pos, ev.Amount, ev.HitKind, targetIsHero);
-                    if (_actorViews.TryGetValue(ev.TargetId, out ActorView? tview))
-                    {
-                        tview.Flash(_clock);
-                    }
-                    _game.Sfx.Play(ev.Amount >= 250 ? SfxId.HeavyHit : SfxId.Hit, -8f);
+                case SimEventKind.EnemyBounce:
+                    _vfx.OnEnemyBounce(ev.Pos);
+                    _game.Sfx.Play(SfxId.WallBounce, -10f);
                     break;
-                }
+
+                case SimEventKind.Hit:
+                    PlayHit(ev);
+                    break;
 
                 case SimEventKind.Death:
                     _vfx.OnDeath(ev.Pos);
@@ -231,11 +257,9 @@ public sealed partial class BattleScene : Node3D
                     break;
 
                 case SimEventKind.WeaponUltimate:
-                    if (ev.WeaponUlt is { } spec)
-                    {
-                        _vfx.OnWeaponUltimate(ev.Pos, ev.Dir, spec);
-                    }
-                    _game.Sfx.Play(SfxId.Ultimate, -4f);
+                    // Fully handled by ScheduleWeaponUltimateTimeline above —
+                    // its own SFX plays there, immediately, matching the
+                    // always-offset-0 first shape beat.
                     break;
 
                 case SimEventKind.Heal:
@@ -247,6 +271,88 @@ public sealed partial class BattleScene : Node3D
                     _vfx.OnShield(ev.Pos, ev.Amount);
                     _game.Sfx.Play(SfxId.Heal, -10f);
                     break;
+
+                case SimEventKind.ComboContact:
+                    _vfx.OnComboContact(ev.Pos, (int)ev.Amount);
+                    _game.Sfx.Play(SfxId.Heal, -6f);
+                    _hud.PulseCombo();
+                    break;
+
+                case SimEventKind.MarkApplied:
+                    _vfx.OnMarkApplied(ev.Pos);
+                    _game.Sfx.Play(SfxId.UiTap, -4f);
+                    break;
+
+                case SimEventKind.EnemySplit:
+                    _vfx.OnEnemySplit(ev.Pos);
+                    _game.Sfx.Play(SfxId.Death, -8f);
+                    break;
+
+                case SimEventKind.Swap:
+                    _vfx.OnSwap(ev.Pos);
+                    _game.Sfx.Play(SfxId.UiTap, -4f);
+                    break;
+            }
+        }
+    }
+
+    private void PlayHit(SimEvent ev)
+    {
+        bool targetIsHero = _visuals.TryGetValue(ev.TargetId, out ActorVisual? tv) && tv.Team == Team.Hero;
+        _vfx.OnHit(ev.Pos, ev.Amount, ev.HitKind, targetIsHero);
+        if (_actorViews.TryGetValue(ev.TargetId, out ActorView? tview))
+        {
+            tview.Flash(_clock);
+        }
+        _game.Sfx.Play(ev.Amount >= 250 ? SfxId.HeavyHit : SfxId.Hit, -8f);
+    }
+
+    /// <summary>Schedules one WeaponUltimate's whole ResolutionTimeline through
+    /// VfxView.Defer and marks the Hit event indices it consumed so the main
+    /// DrainEvents pass skips their immediate handling.</summary>
+    private void ScheduleWeaponUltimateTimeline(
+        SimEvent ultEvent, WeaponUltimateSpec spec, List<SimEvent> events, int ultIndex, HashSet<int> consumedHitIndices)
+    {
+        _game.Sfx.Play(SfxId.Ultimate, -4f);
+
+        if (ultEvent.Timeline is not { } timeline)
+        {
+            _vfx.OnWeaponUltimate(ultEvent.Pos, ultEvent.Dir, spec); // no timeline data: fall back to firing everything at once
+            return;
+        }
+
+        int hitBeatsNeeded = 0;
+        foreach (TimelineBeat b in timeline.Beats)
+        {
+            if (b.Kind == "hit")
+            {
+                hitBeatsNeeded += 1;
+            }
+        }
+
+        var hitEventsInOrder = new List<SimEvent>();
+        for (int j = ultIndex + 1; j < events.Count && hitEventsInOrder.Count < hitBeatsNeeded; j++)
+        {
+            if (events[j].Kind == SimEventKind.Hit)
+            {
+                hitEventsInOrder.Add(events[j]);
+                consumedHitIndices.Add(j);
+            }
+        }
+
+        Vec2 pos = ultEvent.Pos;
+        Vec2 dir = ultEvent.Dir;
+        int hitIndex = 0;
+        foreach (TimelineBeat beat in timeline.Beats)
+        {
+            if (beat.Kind == "shape")
+            {
+                _vfx.Defer(beat.OffsetSeconds, () => _vfx.OnWeaponUltimate(pos, dir, spec));
+            }
+            else if (beat.Kind == "hit" && hitIndex < hitEventsInOrder.Count)
+            {
+                SimEvent hitEv = hitEventsInOrder[hitIndex++];
+                _vfx.Defer(beat.OffsetSeconds, () => PlayHit(hitEv));
             }
         }
     }
@@ -413,8 +519,41 @@ public sealed partial class BattleScene : Node3D
 
     /// <summary>Dev-only (`--autoplay`): aim the active hero at the nearest living
     /// enemy and fire at full draw. Used by the build script to play a whole floor
-    /// without a human, so gameplay can be verified headlessly.</summary>
-    private void AutoFire()
+    /// without a human, so gameplay can be verified headlessly. With `--holdaim
+    /// &lt;sec&gt;`, holds the draw (and refreshes the aim preview) for that long
+    /// before releasing, so a `--shot` capture can land mid-aim.</summary>
+    private void AutoFire(float delta)
+    {
+        if (DevCapture.AimHoldSeconds > 0)
+        {
+            if (_autoAimHoldElapsed < 0f)
+            {
+                if (!BeginAutoAim())
+                {
+                    return;
+                }
+                _autoAimHoldElapsed = 0f;
+                return;
+            }
+            _autoAimHoldElapsed += delta;
+            if (_autoAimHoldElapsed < DevCapture.AimHoldSeconds)
+            {
+                return;
+            }
+            _autoAimHoldElapsed = -1f;
+        }
+
+        if (!BeginAutoAim())
+        {
+            return;
+        }
+        _controller.Release(_dragSim);
+    }
+
+    /// <summary>Aims (without releasing) the active hero at the nearest living
+    /// enemy, at full draw. Shared by the immediate-fire and `--holdaim` paths.
+    /// Returns false if there is no living target.</summary>
+    private bool BeginAutoAim()
     {
         Actor self = _controller.World.ActiveActor();
         Actor? target = null;
@@ -434,13 +573,16 @@ public sealed partial class BattleScene : Node3D
         }
         if (target is null)
         {
-            return;
+            return false;
         }
 
         Vec2 toward = (target.Pos - self.Pos).Normalized();
         _controller.BeginAim(self.Pos);
-        // Release opposite the target at full draw: drag = -direction * maxDrag.
-        _controller.Release(self.Pos - toward * _controller.MaxDrag);
+        // Aim opposite the target at full draw: drag = -direction * maxDrag.
+        _dragSim = self.Pos - toward * _controller.MaxDrag;
+        _controller.UpdateAim(_dragSim);
+        RefreshAimView();
+        return true;
     }
 }
 

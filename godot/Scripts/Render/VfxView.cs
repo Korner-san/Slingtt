@@ -27,10 +27,22 @@ public sealed partial class VfxView : Node3D
         public float MaxScale;
     }
 
+    private const int HazardPoolSize = 40;
+
     private readonly List<Floater> _floaters = new();
     private readonly List<Burst> _bursts = new();
     private int _floaterCursor;
     private int _burstCursor;
+
+    /// <summary>Prompt 10 — staggered ultimate playback: BattleScene enqueues
+    /// (delaySeconds, action) pairs instead of firing everything the instant a
+    /// WeaponUltimate event arrives, so its ResolutionTimeline's shape/hit
+    /// beats actually play out staggered rather than all at once.</summary>
+    private readonly List<(float FireAt, Action Action)> _deferred = new();
+    private float _clock;
+
+    private readonly MeshInstance3D[] _hazardMarkers = new MeshInstance3D[HazardPoolSize];
+    private readonly StandardMaterial3D[] _hazardMats = new StandardMaterial3D[HazardPoolSize];
 
     private float _arenaW;
     private float _arenaH;
@@ -75,6 +87,25 @@ public sealed partial class VfxView : Node3D
             AddChild(mi);
             _bursts.Add(new Burst { Mesh = mi, Mat = mat });
         }
+
+        // Prompt 10 — "trail visuals": one flat disc per pool slot, synced
+        // every frame against the controller's live hazard list (SyncHazards)
+        // rather than reacting to a one-shot event — a hazard has none.
+        var hazardMesh = new CylinderMesh { TopRadius = 0.6f, BottomRadius = 0.6f, Height = 0.02f, RadialSegments = 12, Rings = 1 };
+        for (int i = 0; i < HazardPoolSize; i++)
+        {
+            var mat = MeshFactory.UnshadedMaterial(Palette.VfxTrail with { A = 0.4f }, transparent: true);
+            var mi = new MeshInstance3D
+            {
+                Mesh = hazardMesh,
+                MaterialOverride = mat,
+                Visible = false,
+                CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+            };
+            AddChild(mi);
+            _hazardMarkers[i] = mi;
+            _hazardMats[i] = mat;
+        }
     }
 
     private Vector3 ToWorld(Vec2 simPos, float y = 0.6f) => new(
@@ -110,6 +141,66 @@ public sealed partial class VfxView : Node3D
     public void OnWallBounce(Vec2 pos)
     {
         SpawnBurst(ToWorld(pos, 0.4f), Palette.VfxSpark, 0.5f, 0.16f);
+    }
+
+    /// <summary>Prompt 10 — the live-battle counterpart to Predict's new
+    /// enemy-bounce prediction: a distinct spark from OnWallBounce's, at the
+    /// actual contact point, whenever a Sword-type deflects off an opponent.</summary>
+    public void OnEnemyBounce(Vec2 pos)
+    {
+        SpawnBurst(ToWorld(pos, 0.5f), Palette.VfxImpact, 0.7f, 0.2f);
+    }
+
+    /// <summary>Prompt 10 — "contact pulse": a world-space ring at the touch
+    /// point when Prompt 5's contact combo procs. The HUD's own combo-counter
+    /// punch (BattleHud.PulseCombo) is the other half of "combo counter."</summary>
+    public void OnComboContact(Vec2 pos, int stacks)
+    {
+        SpawnFloater(ToWorld(pos, 1.2f), $"COMBO x{stacks}", Palette.RarityLegendary, 1.1f);
+        SpawnBurst(ToWorld(pos, 0.5f), Palette.RarityLegendary, 1.3f, 0.35f);
+    }
+
+    /// <summary>Prompt 10 — "mark visual" one-shot: the persistent per-turn
+    /// indicator is ActorView.SetMarked, synced every frame; this is just the
+    /// moment-of-application flash.</summary>
+    public void OnMarkApplied(Vec2 pos)
+    {
+        SpawnFloater(ToWorld(pos, 1.2f), "MARKED", Palette.VfxMark, 1.0f);
+        SpawnBurst(ToWorld(pos, 0.6f), Palette.VfxMark, 1.1f, 0.4f);
+    }
+
+    public void OnEnemySplit(Vec2 pos)
+    {
+        SpawnBurst(ToWorld(pos, 0.5f), Palette.TeamEnemy, 1.4f, 0.4f);
+    }
+
+    public void OnSwap(Vec2 pos)
+    {
+        SpawnBurst(ToWorld(pos, 0.5f), Palette.TeamHero, 1.2f, 0.3f);
+    }
+
+    /// <summary>Prompt 10 — staggered ultimate playback: schedules `action` to
+    /// run delaySeconds from now instead of immediately.</summary>
+    public void Defer(double delaySeconds, Action action)
+        => _deferred.Add((_clock + (float)delaySeconds, action));
+
+    /// <summary>Prompt 10 — "trail visuals": called every frame from
+    /// BattleScene.SyncActors' sibling sync pass with the controller's live
+    /// hazard list. Index-matched against the pool, not id-stable — a hazard
+    /// disc can visually "jump" pool slots on the rare frame one expires from
+    /// the middle of the list, an acceptable trade for not tracking ids.</summary>
+    public void SyncHazards(IReadOnlyList<Hazard> hazards)
+    {
+        int shown = Math.Min(hazards.Count, HazardPoolSize);
+        for (int i = 0; i < shown; i++)
+        {
+            _hazardMarkers[i].Position = ToWorld(hazards[i].Pos, 0.02f);
+            _hazardMarkers[i].Visible = true;
+        }
+        for (int i = shown; i < HazardPoolSize; i++)
+        {
+            _hazardMarkers[i].Visible = false;
+        }
     }
 
     public void OnDeath(Vec2 pos)
@@ -188,6 +279,21 @@ public sealed partial class VfxView : Node3D
     public override void _Process(double delta)
     {
         float dt = (float)delta;
+        _clock += dt;
+
+        if (_deferred.Count > 0)
+        {
+            for (int i = _deferred.Count - 1; i >= 0; i--)
+            {
+                if (_clock < _deferred[i].FireAt)
+                {
+                    continue;
+                }
+                Action action = _deferred[i].Action;
+                _deferred.RemoveAt(i);
+                action();
+            }
+        }
 
         foreach (Floater f in _floaters)
         {

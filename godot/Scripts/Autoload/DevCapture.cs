@@ -14,10 +14,17 @@ namespace Slingtt.Render;
 //   --autoitems          jump straight into the items (armory) screen on boot
 //   --itemspage <name>   gacha|upgrade|evolution — which ItemsScreen page to
 //                        start on (implies --autoitems); default gacha
+//   --holdaim <sec>      with --autoplay, hold each auto-fired shot at full draw
+//                        for this many seconds (aim computed and RefreshAimView()
+//                        called) before releasing, so a --shot capture can land
+//                        mid-aim and prove out the aim-preview render (dots,
+//                        enemy-bounce prediction, ultimate footprint) instead of
+//                        only ever seeing post-release battle state
 public sealed partial class DevCapture : Node
 {
     public static bool AutoPlay { get; private set; }
     public static string? ItemsPage { get; private set; }
+    public static double AimHoldSeconds { get; private set; }
 
     private string? _shotPath;
     private double _delay = 1.5;
@@ -54,6 +61,9 @@ public sealed partial class DevCapture : Node
                 case "--itemspage" when i + 1 < args.Length:
                     ItemsPage = args[++i];
                     autoItems = true;
+                    break;
+                case "--holdaim" when i + 1 < args.Length:
+                    AimHoldSeconds = args[++i].ToFloat();
                     break;
             }
         }

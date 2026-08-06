@@ -259,6 +259,13 @@ public enum SimEventKind
     ComboContact, // Prompt 5: ActorId = toucher, TargetId = touched hero, Amount = new stack count
     MarkApplied, // Prompt 7: ActorId = marker enemy, TargetId = marked hero
     EnemySplit, // Prompt 7: ActorId = the boss that died, TargetId = id of the spawned split, Pos = spawn position
+
+    /// <summary>Prompt 10 — emitted unconditionally (unlike Hit, never gated by
+    /// World.DamageEnabled) whenever a Sword-type contact deflects off an
+    /// opposing actor, exactly like WallBounce's existing unconditional
+    /// emission. That's what lets Predict.Trajectory's aim-prediction clone
+    /// see enemy bounces even with damage disabled.</summary>
+    EnemyBounce,
 }
 
 /// <summary>One flat struct instead of a class hierarchy: the sim appends events

@@ -18,6 +18,7 @@ public sealed partial class ActorView : Node3D
     private MeshInstance3D _hpFill = null!;
     private MeshInstance3D _hpBack = null!;
     private MeshInstance3D _shieldBar = null!;
+    private MeshInstance3D _markIcon = null!;
     private StandardMaterial3D _bodyMat = null!;
     private StandardMaterial3D _ringMat = null!;
 
@@ -114,6 +115,19 @@ public sealed partial class ActorView : Node3D
         hpRoot.AddChild(_shieldBar);
 
         AddChild(hpRoot);
+
+        // Prompt 10 — "mark visual": a small pulsing marker over the actor,
+        // visible for as long as Prompt 7's MarkedTurns > 0.
+        var markMat = MeshFactory.UnshadedMaterial(Palette.VfxMark, transparent: true);
+        _markIcon = new MeshInstance3D
+        {
+            Mesh = new SphereMesh { Radius = 0.13f, Height = 0.26f, RadialSegments = 6, Rings = 4 },
+            MaterialOverride = markMat,
+            Position = new Vector3(0, barY + 0.3f, 0),
+            Visible = false,
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+        };
+        AddChild(_markIcon);
     }
 
     private static MeshInstance3D MakeBar(Color color, float w, float h, float z)
@@ -155,6 +169,12 @@ public sealed partial class ActorView : Node3D
             _ringMat.AlbedoColor = Palette.VfxUltimate with { A = 0.6f + Mathf.Sin(tSec * 6f) * 0.25f };
         }
 
+        if (_markIcon.Visible)
+        {
+            float s = 1f + Mathf.Sin(tSec * 5f) * 0.18f;
+            _markIcon.Scale = Vector3.One * s;
+        }
+
         // Hit flash decay.
         if (tSec < _flashUntil)
         {
@@ -180,4 +200,6 @@ public sealed partial class ActorView : Node3D
     public void Flash(float clockSec) => _flashUntil = clockSec + 0.12f;
 
     public void SetAlive(bool alive) => Visible = alive;
+
+    public void SetMarked(bool marked) => _markIcon.Visible = marked;
 }

@@ -146,7 +146,18 @@ public sealed partial class BattleHud : CanvasLayer
 
     public void UpdateBattle(BattleController controller, IReadOnlyDictionary<string, ActorVisual> visuals)
     {
-        _roundLabel.Text = $"ROUND {Mathf.Max(controller.Round, 1)} / {_content.Balance.Sim.TurnLimit}";
+        int round = Mathf.Max(controller.Round, 1);
+        int turnLimit = _content.Balance.Sim.TurnLimit;
+
+        // Prompt 10 — "round-limit warning from round 25": derived from
+        // TurnLimit minus a configurable buffer (default 5), not a hardcoded
+        // 25, so it stays correct if TurnLimit is ever retuned.
+        int warnAt = Mathf.Max(1, turnLimit - _content.Balance.Sim.RoundLimitWarningBuffer);
+        bool warning = round >= warnAt && controller.Phase != Phase.Ended;
+        _roundLabel.Text = warning
+            ? $"ROUND {round} / {turnLimit} — {Mathf.Max(turnLimit - round, 0)} LEFT"
+            : $"ROUND {round} / {turnLimit}";
+        _roundLabel.AddThemeColorOverride("font_color", warning ? Palette.TeamEnemy : Palette.UiTextDim);
 
         int combo = controller.World.ComboStacks;
         _comboLabel.Text = combo > 0 ? $"COMBO x{combo}" : "";
@@ -170,6 +181,18 @@ public sealed partial class BattleHud : CanvasLayer
         _swapBtn.Visible = controller.CanSwap();
 
         RebuildTurnStrip(controller, visuals);
+    }
+
+    /// <summary>Prompt 10 — "combo counter" feedback: a quick punch scale on
+    /// the label itself, the HUD half of a Prompt 5 ComboContact proc (the
+    /// world-space ring is VfxView.OnComboContact).</summary>
+    public void PulseCombo()
+    {
+        _comboLabel.PivotOffset = _comboLabel.Size / 2f;
+        Tween tween = CreateTween();
+        _comboLabel.Scale = Vector2.One * 1.7f;
+        tween.TweenProperty(_comboLabel, "scale", Vector2.One, 0.28)
+            .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
     }
 
     private void RebuildTurnStrip(BattleController controller, IReadOnlyDictionary<string, ActorVisual> visuals)
@@ -227,15 +250,38 @@ public sealed partial class BattleHud : CanvasLayer
             VBoxContainer rv = UiKit.VBox(6);
             rewards.AddChild(rv);
             rv.AddChild(UiKit.MakeLabel("REWARDS", 13, Palette.UiTextDim));
+            int lineIndex = 0;
             foreach (RewardLine line in result.Rewards)
             {
                 HBoxContainer row = UiKit.HBox(8);
                 Label name = UiKit.MakeLabel(Rewards.Label(line.Resource), 19, Palette.Resource(line.Resource));
                 name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
                 row.AddChild(name);
-                row.AddChild(UiKit.MakeLabel($"+{UiKit.FormatNumber(line.Amount)}", 19, Palette.UiText, HorizontalAlignment.Right));
-                row.AddChild(UiKit.MakeLabel($"({UiKit.FormatNumber(line.NewBalance)})", 15, Palette.UiTextDim, HorizontalAlignment.Right));
+
+                Label amountLabel = UiKit.MakeLabel("+0", 19, Palette.UiText, HorizontalAlignment.Right);
+                row.AddChild(amountLabel);
+                Label balanceLabel = UiKit.MakeLabel($"({UiKit.FormatNumber(line.PreviousBalance)})", 15, Palette.UiTextDim, HorizontalAlignment.Right);
+                row.AddChild(balanceLabel);
                 rv.AddChild(row);
+
+                // Prompt 10 — "end-of-battle resource flight with counters
+                // ticking up": each line animates from 0 up to its real
+                // amount (and the balance label along with it) instead of
+                // appearing instantly, staggered slightly per line.
+                RewardLine capturedLine = line;
+                Tween tween = CreateTween();
+                tween.TweenMethod(
+                        Callable.From<double>(v =>
+                        {
+                            int shown = (int)Math.Round(v);
+                            amountLabel.Text = $"+{UiKit.FormatNumber(shown)}";
+                            balanceLabel.Text = $"({UiKit.FormatNumber(capturedLine.PreviousBalance + shown)})";
+                        }),
+                        0.0, (double)line.Amount, 0.6)
+                    .SetDelay(0.1 * lineIndex)
+                    .SetTrans(Tween.TransitionType.Cubic)
+                    .SetEase(Tween.EaseType.Out);
+                lineIndex++;
             }
             if (result.BossFirstClearBonus > 0)
             {

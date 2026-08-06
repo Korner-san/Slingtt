@@ -52,6 +52,11 @@ public static class Palette
     public static readonly Color VfxShield = Hex(0x9FB7FF);
     public static readonly Color VfxSpark = Hex(0xFFE9A8);
 
+    // Prompt 10 — Prompt 7's Marker enemy applies an explicitly "orange" mark.
+    public static readonly Color VfxMark = Hex(0xFF8A3D);
+    // Prompt 7's Trail hazard: a toxic register, distinct from the mark's orange.
+    public static readonly Color VfxTrail = Hex(0x8CFF6B);
+
     /// <summary>Evolution emissive intensity by tier (0..3). Emissive means
     /// progression, so tier 0 is dark and brightness only ever increases.</summary>
     public static readonly float[] EmissiveByTier = { 0.0f, 0.35f, 0.7f, 1.15f };

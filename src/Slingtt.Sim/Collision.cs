@@ -201,6 +201,14 @@ public static class Collision
                     // Push out along the normal so the pair separates.
                     self.Pos.X += normal.X * Eps;
                     self.Pos.Y += normal.Y * Eps;
+                    world.Events.Add(new SimEvent
+                    {
+                        Kind = SimEventKind.EnemyBounce,
+                        ActorId = self.Id,
+                        TargetId = target.Id,
+                        Pos = contact,
+                        Dir = normal,
+                    });
                 }
                 else
                 {

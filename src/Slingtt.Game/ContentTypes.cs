@@ -159,6 +159,13 @@ public sealed class SimBalance
     public int TurnLimit { get; set; } = 30;
     public double EvolutionDamagePerTier { get; set; } = 0.1;
     public double ArmorUltThreshold { get; set; } = 0.5;
+
+    /// <summary>Prompt 10 — rounds before TurnLimit that the HUD starts
+    /// warning. Pure display timing: the sim itself never reads this, so it
+    /// lives here and not on SimConfig. Default 30-5=25, matching "from
+    /// round 25" against the default 30-round TurnLimit.</summary>
+    public int RoundLimitWarningBuffer { get; set; } = 5;
+
     public SwordBalance Sword { get; set; } = new();
     public LanceBalance Lance { get; set; } = new();
     public HammerBalance Hammer { get; set; } = new();

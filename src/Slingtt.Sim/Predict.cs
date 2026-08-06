@@ -4,6 +4,12 @@ public sealed class Prediction
 {
     public List<Vec2> Points { get; } = new(); // sampled positions along the predicted travel
     public List<Vec2> Bounces { get; } = new(); // wall-bounce points, truncated to maxBounces
+
+    /// <summary>Prompt 10 — enemy-deflection points (Sword-type contacts only;
+    /// Lance/Trail pass through, Hammer stops travel outright), same
+    /// "show only what's been earned" truncation as Bounces, tracked
+    /// separately since it's a different kind of information.</summary>
+    public List<Vec2> EnemyBounces { get; } = new();
 }
 
 public static class Predict
@@ -45,12 +51,21 @@ public static class Predict
                 {
                     prediction.Bounces.Add(ev.Pos);
                 }
+                else if (ev.Kind == SimEventKind.EnemyBounce)
+                {
+                    prediction.EnemyBounces.Add(ev.Pos);
+                }
             }
             clone.Events.Clear();
             if (prediction.Bounces.Count > maxBounces)
             {
                 prediction.Bounces.RemoveRange(maxBounces, prediction.Bounces.Count - maxBounces);
                 break; // show only the bounces the player has earned
+            }
+            if (prediction.EnemyBounces.Count > maxBounces)
+            {
+                prediction.EnemyBounces.RemoveRange(maxBounces, prediction.EnemyBounces.Count - maxBounces);
+                break;
             }
         }
         return prediction;
