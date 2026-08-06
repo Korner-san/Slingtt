@@ -42,7 +42,12 @@ public static class Damage
         }
 
         WeaponStats w = source.Weapon;
-        double raw = w.Atk * hitMult * (1 + w.Tier * cfg.EvolutionDamagePerTier);
+        // Prompt 5 — the contact-combo counter buffs whatever an active hero
+        // deals (benched heroes deal no damage anyway; this check is what keeps
+        // a fallback-activated hero, mid-transition, from double-dipping before
+        // IsBenched actually flips). Never applies to enemy damage.
+        double comboMult = source.Team == Team.Hero && !source.IsBenched ? Combo.DamageMultiplier(world) : 1.0;
+        double raw = w.Atk * hitMult * (1 + w.Tier * cfg.EvolutionDamagePerTier) * comboMult;
         double mitigated = raw * (1 - target.Def / (target.Def + cfg.DefK));
         double varied = mitigated * Rng.Range(ref world.Rng, cfg.VarianceMin, cfg.VarianceMax);
         double final = Math.Max(1, SimMath.RoundJs(varied));

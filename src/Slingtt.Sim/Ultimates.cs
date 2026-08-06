@@ -26,7 +26,11 @@ public static class Ultimates
     private const double HitBeatStaggerSeconds = 0.05;
     private const double AftershockBonusRingScale = 1.3; // matches balance.json's ultimateEscalation.aftershockBonusRingScale
 
-    public static void FireWeaponUltimate(World world, SimConfig cfg, Actor self)
+    /// <summary>scaleMultiplier composes with the shape's already-resolved
+    /// rarity scale (Prompt 3) — 1.0 for a normal firing, 1.25 for Prompt 5's
+    /// contact combo. It's a pure geometry multiplier: damage, sweep degrees,
+    /// and dual activation are untouched by it.</summary>
+    public static void FireWeaponUltimate(World world, SimConfig cfg, Actor self, double scaleMultiplier = 1.0)
     {
         if (self.Weapon.Ultimate is not { } spec)
         {
@@ -39,12 +43,16 @@ public static class Ultimates
         double dirLen = self.LastTravelDir.Length();
         Vec2 baseDir = self.LastTravelDir * (1.0 / (dirLen == 0 ? 1 : dirLen));
 
+        ShapeDef shape = scaleMultiplier == 1.0
+            ? spec.Shape
+            : spec.Shape with { Width = spec.Shape.Width * scaleMultiplier, Radius = spec.Shape.Radius * scaleMultiplier };
+
         var timeline = new ResolutionTimeline();
         world.Events.Add(new SimEvent
         {
             Kind = SimEventKind.WeaponUltimate,
             ActorId = self.Id,
-            WeaponUlt = spec,
+            WeaponUlt = spec with { Shape = shape },
             Pos = self.Pos,
             Dir = baseDir,
             Timeline = timeline,
@@ -54,7 +62,7 @@ public static class Ultimates
 
         // Base activation — full shape, full damage, everything in range.
         var baseHitIds = new HashSet<string>();
-        FireShapeQuery(world, cfg, self, spec, spec.Shape, baseDir, spec.DmgMult,
+        FireShapeQuery(world, cfg, self, spec, shape, baseDir, spec.DmgMult,
             exclude: null, applyStun: true, timeline, ref timeCursor, baseHitIds);
 
         // Sweep / concentric-ring escalation — reduced damage, never re-hits a
@@ -67,13 +75,13 @@ public static class Ultimates
 
             if (spec.Kind == WeaponUltKind.Aftershock)
             {
-                ShapeDef ring1 = spec.Shape with { Radius = spec.Shape.Radius * AftershockBonusRingScale };
+                ShapeDef ring1 = shape with { Radius = shape.Radius * AftershockBonusRingScale };
                 FireShapeQuery(world, cfg, self, spec, ring1, baseDir, sweepDamage,
                     excluded, applyStun: false, timeline, ref timeCursor, excluded);
 
                 if (spec.SweepBidirectional)
                 {
-                    ShapeDef ring2 = spec.Shape with { Radius = spec.Shape.Radius * AftershockBonusRingScale * AftershockBonusRingScale };
+                    ShapeDef ring2 = shape with { Radius = shape.Radius * AftershockBonusRingScale * AftershockBonusRingScale };
                     FireShapeQuery(world, cfg, self, spec, ring2, baseDir, sweepDamage,
                         excluded, applyStun: false, timeline, ref timeCursor, excluded);
                 }
@@ -81,13 +89,13 @@ public static class Ultimates
             else
             {
                 double sweepRad = spec.SweepDegrees * Math.PI / 180.0;
-                ShapeDef clockwise = spec.Shape with { RotationOffset = spec.Shape.RotationOffset - sweepRad };
+                ShapeDef clockwise = shape with { RotationOffset = shape.RotationOffset - sweepRad };
                 FireShapeQuery(world, cfg, self, spec, clockwise, baseDir, sweepDamage,
                     excluded, applyStun: false, timeline, ref timeCursor, excluded);
 
                 if (spec.SweepBidirectional)
                 {
-                    ShapeDef counterClockwise = spec.Shape with { RotationOffset = spec.Shape.RotationOffset + sweepRad };
+                    ShapeDef counterClockwise = shape with { RotationOffset = shape.RotationOffset + sweepRad };
                     FireShapeQuery(world, cfg, self, spec, counterClockwise, baseDir, sweepDamage,
                         excluded, applyStun: false, timeline, ref timeCursor, excluded);
                 }
@@ -98,7 +106,7 @@ public static class Ultimates
         if (spec.DualActivation)
         {
             timeCursor = Math.Max(timeCursor, cfg.SweepMinBeatOffsetSeconds * 2);
-            FireShapeQuery(world, cfg, self, spec, spec.Shape, baseDir, spec.DmgMult,
+            FireShapeQuery(world, cfg, self, spec, shape, baseDir, spec.DmgMult,
                 exclude: null, applyStun: true, timeline, ref timeCursor, new HashSet<string>());
         }
     }

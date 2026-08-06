@@ -51,6 +51,15 @@ public sealed class World
 
     public bool DamageEnabled = true; // false in aim-prediction clones
 
+    /// <summary>Prompt 5 — global contact-combo stacks, 0..Combo.MaxStacks.
+    /// Persists through swaps (it lives here, not on any Actor) and decays by
+    /// one every turn (TurnOrder.AdvanceRoundRobin) that ends without a proc.</summary>
+    public int ComboStacks;
+
+    /// <summary>Set by Combo.CheckContact when a proc happens, read and reset by
+    /// TurnOrder at the start of the next turn to decide whether to decay.</summary>
+    public bool ComboContactThisTurn;
+
     public static World Create(WorldSetup setup)
     {
         var w = new World
@@ -150,6 +159,8 @@ public sealed class World
             Winner = Winner,
             DamageEnabled = DamageEnabled,
             ContactLog = new Dictionary<string, int>(ContactLog),
+            ComboStacks = ComboStacks,
+            ComboContactThisTurn = ComboContactThisTurn,
         };
         foreach (Actor a in Actors)
         {

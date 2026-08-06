@@ -61,6 +61,7 @@ public static class TurnOrder
             }
 
             RegenBenchedHeroes(world, cfg);
+            DecayComboIfNoContact(world);
 
             if (actor.StunnedTurns > 0)
             {
@@ -111,5 +112,19 @@ public static class TurnOrder
             a.Hp += healed;
             world.Events.Add(new SimEvent { Kind = SimEventKind.Heal, ActorId = a.Id, Amount = healed, Pos = a.Pos });
         }
+    }
+
+    /// <summary>Prompt 5 — "decaying one stack per turn without contact": every
+    /// turn actually granted (hero or enemy, same cadence as bench regen), the
+    /// combo counter loses a stack unless Combo.CheckContact proc'd during the
+    /// turn that just ended. ComboContactThisTurn reflects the turn that's
+    /// ending here, then resets for the turn about to start.</summary>
+    private static void DecayComboIfNoContact(World world)
+    {
+        if (!world.ComboContactThisTurn)
+        {
+            world.ComboStacks = Math.Max(0, world.ComboStacks - 1);
+        }
+        world.ComboContactThisTurn = false;
     }
 }

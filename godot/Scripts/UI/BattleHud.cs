@@ -17,6 +17,7 @@ public sealed partial class BattleHud : CanvasLayer
 
     private Label _floorLabel = null!;
     private Label _roundLabel = null!;
+    private Label _comboLabel = null!;
     private Label _activeLabel = null!;
     private Label _hintLabel = null!;
     private Button _swapBtn = null!;
@@ -62,6 +63,9 @@ public sealed partial class BattleHud : CanvasLayer
         _roundLabel = UiKit.MakeLabel("ROUND 1", 18, Palette.UiTextDim, HorizontalAlignment.Center);
         _roundLabel.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         topRow.AddChild(_roundLabel);
+
+        _comboLabel = UiKit.MakeLabel("", 18, Palette.RarityLegendary, HorizontalAlignment.Right);
+        topRow.AddChild(_comboLabel);
 
         Button menuBtn = UiKit.MakeButton("MENU", Palette.UiSurfaceRaised, primary: false, fontSize: 18);
         menuBtn.CustomMinimumSize = new Vector2(96, UiKit.TouchMin);
@@ -143,6 +147,9 @@ public sealed partial class BattleHud : CanvasLayer
     public void UpdateBattle(BattleController controller, IReadOnlyDictionary<string, ActorVisual> visuals)
     {
         _roundLabel.Text = $"ROUND {Mathf.Max(controller.Round, 1)} / {_content.Balance.Sim.TurnLimit}";
+
+        int combo = controller.World.ComboStacks;
+        _comboLabel.Text = combo > 0 ? $"COMBO x{combo}" : "";
 
         string activeId = controller.ActiveActorId ?? "";
         if (visuals.TryGetValue(activeId, out ActorVisual? v))

@@ -37,6 +37,7 @@ public static class BattleSim
         self.HitsThisTravel = 0;
         self.PiercedIds.Clear();
         self.PierceBudgetUsed = 0;
+        self.ComboFiredThisTravel = false;
 
         world.Phase = Phase.Travelling;
         world.Events.Add(new SimEvent
@@ -134,6 +135,15 @@ public static class BattleSim
                 Collision.MaintainPierceMarks(world, self);
 
                 bool stoppedByWeapon = Collision.IntegrateTravel(world, cfg, self, dt);
+
+                // Prompt 5 — teammate contact is checked independently of the
+                // opposing-team collision Collision.IntegrateTravel resolves
+                // above; touching your other active hero never deflects or
+                // stops the shot, it only procs the combo.
+                if (self.Team == Team.Hero)
+                {
+                    Combo.CheckContact(world, cfg, self);
+                }
 
                 // Friction after integration, not before.
                 self.Vel *= cfg.FrictionPerTick;

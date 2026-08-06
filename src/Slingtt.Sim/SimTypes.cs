@@ -147,6 +147,15 @@ public sealed class Actor
     /// Never true for enemies.</summary>
     public bool IsBenched;
 
+    /// <summary>Prompt 5 — a single sling shot can only proc the contact combo
+    /// once even if its flight path re-crosses the teammate (wall bounces,
+    /// lingering overlap across several ticks). Reset on every launch.</summary>
+    public bool ComboFiredThisTravel;
+
+    /// <summary>Plumbed for Prompt 7 ("marked"); always false until then. A
+    /// marked hero can never be the target of a Prompt 5 contact combo.</summary>
+    public bool IsMarked;
+
     public bool IsAlive => Hp > 0;
 
     public Actor Clone()
@@ -179,6 +188,7 @@ public enum SimEventKind
     Shield,
     BattleEnd,
     Swap, // Prompt 4: ActorId = outgoing (benched) hero, TargetId = incoming (activated) hero
+    ComboContact, // Prompt 5: ActorId = toucher, TargetId = touched hero, Amount = new stack count
 }
 
 /// <summary>One flat struct instead of a class hierarchy: the sim appends events
@@ -187,7 +197,7 @@ public struct SimEvent
 {
     public SimEventKind Kind;
     public string ActorId;   // acting actor, or damage source for Hit
-    public string TargetId;  // Hit only, Swap
+    public string TargetId;  // Hit, Swap, ComboContact
     public Vec2 Pos;
     public Vec2 Dir;         // Launch/WeaponUltimate direction, WallBounce normal
     public double Amount;    // damage / heal / shield / bounce speed / drawRatio
