@@ -14,7 +14,7 @@ public static class EnemyAi
         double best = double.PositiveInfinity;
         foreach (Actor h in world.Actors)
         {
-            if (h.Team != Team.Hero || !h.IsAlive)
+            if (h.Team != Team.Hero || !h.IsAlive || h.IsBenched)
             {
                 continue;
             }

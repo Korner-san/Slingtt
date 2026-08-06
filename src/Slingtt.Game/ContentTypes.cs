@@ -193,6 +193,14 @@ public sealed class UltimateEscalationBalance
         => ScalePerRarityIndex[Math.Clamp(rarityIndex, 0, ScalePerRarityIndex.Count - 1)];
 }
 
+// Prompt 4 — party of 2 active / 1 benched. The only balance number the bench
+// mechanic itself needs; everything else (turn order, swap, targeting
+// exclusion) is pure mechanics with no tunable.
+public sealed class BenchBalance
+{
+    public double RegenPctPerTurn { get; set; } = 0.05;
+}
+
 public sealed class ProgressionBalance
 {
     public double LevelCoeff { get; set; } = 0.06;
@@ -255,6 +263,7 @@ public sealed class Balance
     public SimBalance Sim { get; set; } = new();
     public ItemRarityBalance ItemRarity { get; set; } = new();
     public UltimateEscalationBalance UltimateEscalation { get; set; } = new();
+    public BenchBalance Bench { get; set; } = new();
     public ProgressionBalance Progression { get; set; } = new();
     public GachaBalance Gacha { get; set; } = new();
     public RewardsBalance Rewards { get; set; } = new();

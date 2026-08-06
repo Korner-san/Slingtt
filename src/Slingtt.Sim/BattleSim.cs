@@ -50,6 +50,59 @@ public static class BattleSim
         return true;
     }
 
+    /// <summary>Prompt 4 — swap the active hero out for the benched teammate
+    /// instead of launching. Consumes the whole turn: the incoming hero enters at
+    /// the outgoing hero's tile and immediately fires their weapon ultimate from
+    /// there (a full, unfiltered activation — arrival is a reward for swapping,
+    /// not a weaker echo of it), then the turn passes on exactly as if a launch
+    /// had resolved. Returns false (no state change) when there's no living
+    /// benched teammate to swap in.</summary>
+    public static bool TrySwap(World world, SimConfig cfg)
+    {
+        if (world.Phase != Phase.Aiming)
+        {
+            return false;
+        }
+
+        Actor outgoing = world.ActiveActor();
+        if (outgoing.Team != Team.Hero)
+        {
+            return false;
+        }
+
+        Actor? incoming = null;
+        foreach (Actor a in world.Actors)
+        {
+            if (a.Team == Team.Hero && a.IsBenched && a.IsAlive)
+            {
+                incoming = a;
+                break;
+            }
+        }
+        if (incoming is null)
+        {
+            return false;
+        }
+
+        incoming.Pos = outgoing.Pos;
+        incoming.IsBenched = false;
+        outgoing.IsBenched = true;
+
+        world.Events.Add(new SimEvent
+        {
+            Kind = SimEventKind.Swap,
+            ActorId = outgoing.Id,
+            TargetId = incoming.Id,
+            Pos = incoming.Pos,
+        });
+
+        Ultimates.FireWeaponUltimate(world, cfg, incoming);
+
+        world.Phase = Phase.Settling;
+        world.Tick += 1;
+        return true;
+    }
+
     /// <summary>Advance the simulation one fixed tick. In Aiming with a hero active
     /// this is a no-op (the sim waits for player input); enemy turns resolve their
     /// own launch from the world RNG.</summary>

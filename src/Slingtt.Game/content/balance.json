@@ -39,6 +39,9 @@
     "sweepMinBeatOffsetSeconds": 0.15,
     "aftershockBonusRingScale": 1.3
   },
+  "bench": {
+    "regenPctPerTurn": 0.05
+  },
   "progression": {
     "levelCoeff": 0.06,
     "maxLevel": 30,

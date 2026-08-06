@@ -168,7 +168,7 @@ public static class BattleSetup
         };
     }
 
-    private static ActorInit HeroActor(Content content, LoadoutSlot slot, int index)
+    private static ActorInit HeroActor(Content content, LoadoutSlot slot, int index, bool benched)
     {
         if (!content.Heroes.TryGetValue(slot.HeroId, out HeroDef? hero)
             || !content.Weapons.TryGetValue(slot.WeaponId, out WeaponDef? weapon)
@@ -228,11 +228,20 @@ public static class BattleSetup
         double[] xs = { 0.25, 0.5, 0.75 };
         double fx = index < xs.Length ? xs[index] : 0.5;
 
+        // Prompt 4 — a benched hero is untargetable regardless of position
+        // (Collision/Ultimates/EnemyAi all skip IsBenched actors), so this is
+        // cosmetic only: the unused third lane, pulled back against the wall so
+        // it reads as "off the front line" instead of overlapping either active
+        // hero's tile.
+        Vec2 pos = benched
+            ? new Vec2(arena.W * 0.75, arena.H - 0.5)
+            : new Vec2(arena.W * fx, arena.H - (index == 1 ? 1.6 : 2.2));
+
         return new ActorInit
         {
             Id = hero.Id,
             Team = Team.Hero,
-            Pos = new Vec2(arena.W * fx, arena.H - (index == 1 ? 1.6 : 2.2)),
+            Pos = pos,
             Radius = 0.5,
             Hp = Math.Min(slot.CurrentHp ?? maxHp, maxHp),
             Def = def,
@@ -244,6 +253,7 @@ public static class BattleSetup
                 Ultimate = armorUltDef is null ? null : ArmorUltSpec(armorUltDef, aTier),
             },
             MoveDurationTicks = moveTicks,
+            IsBenched = benched,
         };
     }
 
@@ -257,10 +267,13 @@ public static class BattleSetup
         double scale = 1 + content.Balance.Progression.EnemyScalingCoeff * floorNumber;
         int tickRate = content.Balance.Sim.TickRate;
 
+        // Prompt 4 — party of 2 active / 1 benched: the third roster slot starts
+        // benched (a team of 2 or fewer has nobody to bench). Which slot starts
+        // benched isn't yet player-choosable; that's a follow-up, not this prompt.
         var actors = new List<ActorInit>();
         for (int i = 0; i < team.Count; i++)
         {
-            actors.Add(HeroActor(content, team[i], i));
+            actors.Add(HeroActor(content, team[i], i, benched: team.Count >= 3 && i == 2));
         }
 
         int n = floorDef.Enemies.Count;

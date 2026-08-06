@@ -33,6 +33,10 @@ public sealed class SimConfig
     public double SweepDamageMult { get; init; } = 0.6;
     public double SweepMinBeatOffsetSeconds { get; init; } = 0.15;
 
+    // Prompt 4 — fraction of max HP a benched hero regenerates every turn (any
+    // actor's turn, hero or enemy — see TurnOrder.AdvanceRoundRobin).
+    public double BenchRegenPctPerTurn { get; init; } = 0.05;
+
     public double Dt => 1.0 / TickRate;
 
     private double _frictionPerTick = double.NaN;

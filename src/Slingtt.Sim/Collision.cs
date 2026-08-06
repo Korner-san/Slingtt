@@ -129,7 +129,7 @@ public static class Collision
 
             foreach (Actor other in world.Actors)
             {
-                if (other.Team == self.Team || !other.IsAlive)
+                if (other.Team == self.Team || !other.IsAlive || other.IsBenched)
                 {
                     continue;
                 }

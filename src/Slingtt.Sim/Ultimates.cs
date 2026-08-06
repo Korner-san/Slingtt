@@ -119,7 +119,7 @@ public static class Ultimates
 
         foreach (Actor target in world.Actors)
         {
-            if (target.Team == self.Team || !target.IsAlive)
+            if (target.Team == self.Team || !target.IsAlive || target.IsBenched)
             {
                 continue;
             }

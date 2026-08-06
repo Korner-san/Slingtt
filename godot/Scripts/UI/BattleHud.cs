@@ -13,11 +13,13 @@ public sealed partial class BattleHud : CanvasLayer
     public event Action? QuitPressed;
     public event Action? RestartPressed;
     public event Action? ContinuePressed;
+    public event Action? SwapPressed;
 
     private Label _floorLabel = null!;
     private Label _roundLabel = null!;
     private Label _activeLabel = null!;
     private Label _hintLabel = null!;
+    private Button _swapBtn = null!;
     private HBoxContainer _turnStrip = null!;
     private Control _overlay = null!;
     private VBoxContainer _overlayBody = null!;
@@ -87,6 +89,11 @@ public sealed partial class BattleHud : CanvasLayer
         _hintLabel = UiKit.MakeLabel("Drag back from your hero, then release", 16, Palette.UiTextDim, HorizontalAlignment.Center);
         bottomCol.AddChild(_hintLabel);
 
+        _swapBtn = UiKit.MakeButton("SWAP IN BENCH", Palette.UiSurfaceRaised, primary: false, fontSize: 16);
+        _swapBtn.Visible = false;
+        _swapBtn.Pressed += () => SwapPressed?.Invoke();
+        bottomCol.AddChild(_swapBtn);
+
         col.AddChild(bottom);
 
         // --- end-of-floor overlay -------------------------------------------
@@ -152,6 +159,8 @@ public sealed partial class BattleHud : CanvasLayer
             _activeLabel.Text = "";
             _hintLabel.Text = controller.Phase == Phase.Ended ? "" : "Resolving…";
         }
+
+        _swapBtn.Visible = controller.CanSwap();
 
         RebuildTurnStrip(controller, visuals);
     }

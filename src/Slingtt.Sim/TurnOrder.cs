@@ -41,6 +41,27 @@ public static class TurnOrder
             {
                 continue;
             }
+
+            if (actor.IsBenched)
+            {
+                // A benched hero the player never swapped back in still has to
+                // fight if both active heroes went down — otherwise the turn
+                // order would skip it forever (it never volunteers for a turn on
+                // its own) while the player has no one left to act with. Forcing
+                // it active here has no arrival-ultimate perk: that's reserved
+                // for a deliberate BattleSim.TrySwap, not this fallback.
+                if (!HasLivingActiveHero(world, actor.Team))
+                {
+                    actor.IsBenched = false;
+                }
+                else
+                {
+                    continue;
+                }
+            }
+
+            RegenBenchedHeroes(world, cfg);
+
             if (actor.StunnedTurns > 0)
             {
                 actor.StunnedTurns -= 1; // stunned actors lose the turn
@@ -53,5 +74,42 @@ public static class TurnOrder
             return;
         }
         throw new InvalidOperationException("sim: turn order failed to find a living actor");
+    }
+
+    private static bool HasLivingActiveHero(World world, Team team)
+    {
+        foreach (Actor a in world.Actors)
+        {
+            if (a.Team == team && a.IsAlive && !a.IsBenched)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>"Regenerating HP per turn": every turn actually granted (hero or
+    /// enemy), any living benched hero heals a fraction of its max HP.</summary>
+    private static void RegenBenchedHeroes(World world, SimConfig cfg)
+    {
+        foreach (Actor a in world.Actors)
+        {
+            if (a.Team != Team.Hero || !a.IsAlive || !a.IsBenched)
+            {
+                continue;
+            }
+            double amount = SimMath.RoundJs(a.MaxHp * cfg.BenchRegenPctPerTurn);
+            if (amount <= 0)
+            {
+                continue;
+            }
+            double healed = Math.Min(amount, a.MaxHp - a.Hp);
+            if (healed <= 0)
+            {
+                continue;
+            }
+            a.Hp += healed;
+            world.Events.Add(new SimEvent { Kind = SimEventKind.Heal, ActorId = a.Id, Amount = healed, Pos = a.Pos });
+        }
     }
 }

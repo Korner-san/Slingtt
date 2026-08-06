@@ -132,6 +132,7 @@ public sealed partial class BattleScene : Node3D
         _hud.QuitPressed += OnQuit;
         _hud.RestartPressed += OnRestart;
         _hud.ContinuePressed += OnContinue;
+        _hud.SwapPressed += OnSwap;
         AddChild(_hud);
 
         FloorClassification cls = Rewards.Classify(floor, _game.Content.Balance.Progression);
@@ -402,6 +403,13 @@ public sealed partial class BattleScene : Node3D
     }
 
     private void OnQuit() => _game.GoToMenu();
+
+    private void OnSwap()
+    {
+        _dragTouchIndex = -1;
+        _aim.HidePreview();
+        _controller.TrySwap();
+    }
 
     /// <summary>Dev-only (`--autoplay`): aim the active hero at the nearest living
     /// enemy and fire at full draw. Used by the build script to play a whole floor

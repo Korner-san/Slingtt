@@ -19,6 +19,7 @@ public sealed class RenderActor
     public bool ShieldActive;
     public bool Alive;
     public bool Active;
+    public bool Benched;
 }
 
 public sealed class AimState
@@ -239,6 +240,7 @@ public sealed class BattleController
                 ShieldActive = actor.ShieldHp > 0 && World.Round <= actor.ShieldExpiresRound,
                 Alive = actor.IsAlive,
                 Active = World.ActiveActorId == actor.Id,
+                Benched = actor.IsBenched,
             });
         }
         return outp;
@@ -258,6 +260,24 @@ public sealed class BattleController
            && World.ActiveActorId is not null
            && World.ActiveActor().Team == Team.Hero;
 
+    /// <summary>Prompt 4 — true when the active hero could swap out for a living
+    /// benched teammate right now (used to show/enable the swap button).</summary>
+    public bool CanSwap()
+    {
+        if (!IsAwaitingHeroInput())
+        {
+            return false;
+        }
+        foreach (Actor a in World.Actors)
+        {
+            if (a.Team == Team.Hero && a.IsBenched && a.IsAlive)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// <summary>Upcoming actors for the turn-order strip (next `count`, active
     /// first).</summary>
     public List<string> Upcoming(int count)
@@ -276,7 +296,7 @@ public sealed class BattleController
         for (int i = 0; i < n * 3 && outp.Count < count; i++)
         {
             Actor a = World.Actors[((cursor % n) + n) % n];
-            if (a.IsAlive)
+            if (a.IsAlive && !a.IsBenched) // a benched hero never gets a turn until swapped in
             {
                 if (outp.Count > 0 || a.Id == World.ActiveActorId || World.ActiveActorId is null)
                 {
@@ -331,6 +351,15 @@ public sealed class BattleController
         double dy = _aimStartY - simPos.Y;
         double drawRatio = Math.Min(Math.Sqrt(dx * dx + dy * dy) / _maxDrag, 1);
         return BattleSim.TryLaunch(World, _cfg, new LaunchInput { DirX = dx, DirY = dy, DrawRatio = drawRatio });
+    }
+
+    /// <summary>Prompt 4 — swap the active hero for the benched teammate instead
+    /// of launching. Cancels any in-progress aim (a swap is a distinct choice,
+    /// not a way to also fire). Returns true if the swap actually happened.</summary>
+    public bool TrySwap()
+    {
+        CancelAim();
+        return BattleSim.TrySwap(World, _cfg);
     }
 
     public AimState? GetAim() => _aimState;

@@ -14,6 +14,7 @@ public sealed class ActorInit
     public WeaponStats Weapon { get; init; } = null!;
     public ArmorStats? Armor { get; init; }
     public int MoveDurationTicks { get; init; }
+    public bool IsBenched { get; init; }
 }
 
 public sealed class WorldSetup
@@ -79,6 +80,7 @@ public sealed class World
                 Weapon = init.Weapon,
                 Armor = init.Armor,
                 MoveDurationTicks = init.MoveDurationTicks,
+                IsBenched = init.IsBenched,
             });
         }
         return w;

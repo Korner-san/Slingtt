@@ -141,6 +141,12 @@ public sealed class Actor
     public int StunnedTurns;
     public Vec2 LastTravelDir = new(0, 1);
 
+    /// <summary>Prompt 4 — party of 2 active / 1 benched. A benched hero takes no
+    /// turns (TurnOrder skips it), can't be hit (Collision/Ultimates skip it as a
+    /// target, EnemyAi never aims at it), and regenerates HP each turn instead.
+    /// Never true for enemies.</summary>
+    public bool IsBenched;
+
     public bool IsAlive => Hp > 0;
 
     public Actor Clone()
@@ -172,6 +178,7 @@ public enum SimEventKind
     Heal,
     Shield,
     BattleEnd,
+    Swap, // Prompt 4: ActorId = outgoing (benched) hero, TargetId = incoming (activated) hero
 }
 
 /// <summary>One flat struct instead of a class hierarchy: the sim appends events
@@ -180,7 +187,7 @@ public struct SimEvent
 {
     public SimEventKind Kind;
     public string ActorId;   // acting actor, or damage source for Hit
-    public string TargetId;  // Hit only
+    public string TargetId;  // Hit only, Swap
     public Vec2 Pos;
     public Vec2 Dir;         // Launch/WeaponUltimate direction, WallBounce normal
     public double Amount;    // damage / heal / shield / bounce speed / drawRatio

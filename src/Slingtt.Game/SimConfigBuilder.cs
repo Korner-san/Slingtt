@@ -33,6 +33,7 @@ public static class SimConfigBuilder
             HammerAoeRimMult = s.Hammer.AoeRimMult,
             SweepDamageMult = balance.UltimateEscalation.SweepDamageMult,
             SweepMinBeatOffsetSeconds = balance.UltimateEscalation.SweepMinBeatOffsetSeconds,
+            BenchRegenPctPerTurn = balance.Bench.RegenPctPerTurn,
         };
     }
 }
